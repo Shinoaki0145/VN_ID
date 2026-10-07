@@ -1,6 +1,25 @@
+import sys
+import types
+
 import pytest
 from vn_id.qr.decoder import QRDecoder
 from vn_id.qr.mock import MockQRDecoder
+
+
+def test_qreader_reencodes_vietnamese_payload_as_utf8(monkeypatch):
+    options = {}
+
+    class FakeQReader:
+        def __init__(self, **kwargs):
+            options.update(kwargs)
+
+    qreader_module = types.ModuleType("qreader")
+    qreader_module.QReader = FakeQReader
+    monkeypatch.setitem(sys.modules, "qreader", qreader_module)
+
+    QRDecoder()._get_qreader()
+
+    assert options["reencode_to"] == "cp65001"
 
 def test_parse_valid_qr_payload():
     # Chuỗi QR chuẩn: Số CCCD | CMND cũ | Họ tên | Ngày sinh | Giới tính | Địa chỉ | Ngày cấp

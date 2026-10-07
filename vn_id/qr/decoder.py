@@ -72,7 +72,7 @@ class QRDecoder:
 
                 self._qreader = QReader(
                     weights_folder=weights_arg,
-                    reencode_to=None,
+                    reencode_to="cp65001",
                 )
 
             if str(self.device).startswith("cuda"):
