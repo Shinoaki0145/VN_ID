@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vn-id"
+version = "0.1.0"
+description = "Pipeline trích xuất CCCD đa định dạng 2 mặt (CCCD gắn chip 2021 & Căn cước 2024)"
+authors = [{ name = "Antigravity Pair" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0",
+    "numpy>=1.24",
+    "opencv-python-headless>=4.8",
+    "fastapi>=0.100",
+    "python-multipart>=0.0.6",
+    "uvicorn>=0.22",
+    "httpx>=0.24",
+    "click>=8.0",
+]
+
+[project.scripts]
+vn-id = "vn_id.cli.main:cli"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
