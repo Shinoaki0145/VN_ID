@@ -1,0 +1,60 @@
+{
+  "success": true,
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "004083000675",
+    "cmnd_old": "080450297",
+    "name": "N繫ng Tr廕吵 Huy",
+    "dob": "13/12/1983",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "21202s Minh NGI THƯƠNG THÚ Tâm Nguyễn Binh Place ofresidence Cao Bằng",
+    "residence": "Tổ 11, Sông Bằng, Thành phố Cao Bằng, Cao Bằng",
+    "issue_date": "15/08/2021",
+    "expiry_date": "28/04/2029",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "qr",
+    "cmnd_old": "qr",
+    "name": "qr",
+    "dob": "qr",
+    "gender": "qr",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "qr",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "back_rules"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "warnings": []
+  },
+  "timings": {
+    "front_align_ms": 2.0647048950195312,
+    "qr_ms": 387.17007637023926,
+    "front_ocr_det_ms": 893.0356502532959,
+    "front_ocr_rec_ms": 713.416337966919,
+    "front_ocr_sort_ms": 0.5371570587158203,
+    "front_ocr_ms": 1607.0175170898438,
+    "front_rules_ms": 1.359701156616211,
+    "back_align_ms": 1.8012523651123047,
+    "back_ocr_det_ms": 868.6981201171875,
+    "back_ocr_rec_ms": 636.221170425415,
+    "back_ocr_sort_ms": 0.3325939178466797,
+    "back_ocr_ms": 1505.2833557128906,
+    "back_rules_ms": 0.1399517059326172,
+    "fusion_ms": 0.09202957153320312,
+    "total_ms": 3521.357297897339
+  }
+}

@@ -1,0 +1,62 @@
+Sai origin
+
+{
+  "success": true,
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "079183034888",
+    "cmnd_old": "272412805",
+    "name": "Huỳnh Thị Thanh Hiền",
+    "dob": "14/09/1983",
+    "gender": "Nữ",
+    "nationality": "Việt Nam",
+    "origin": "ALLE, Phường Quận TP. Hồ Chí Minh",
+    "residence": "Khu Dân Cư 1, Ấp Tam Bung, Thống Nhất, Đồng Nai, Đồng Nai",
+    "issue_date": "18/11/2024",
+    "expiry_date": "14/09/2043",
+    "issue_loc": "Bộ Công an",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "qr",
+    "cmnd_old": "qr",
+    "name": "qr",
+    "dob": "qr",
+    "gender": "qr",
+    "nationality": "default",
+    "origin": "back_rules",
+    "residence": "qr",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "back_rules"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "warnings": []
+  },
+  "timings": {
+    "front_align_ms": 2.192974090576172,
+    "qr_ms": 139.4815444946289,
+    "front_ocr_det_ms": 940.152645111084,
+    "front_ocr_rec_ms": 578.322172164917,
+    "front_ocr_sort_ms": 0.2942085266113281,
+    "front_ocr_ms": 1518.810510635376,
+    "front_rules_ms": 1.7840862274169922,
+    "back_align_ms": 1.4176368713378906,
+    "back_ocr_det_ms": 965.9218788146973,
+    "back_ocr_rec_ms": 647.1378803253174,
+    "back_ocr_sort_ms": 0.3170967102050781,
+    "back_ocr_ms": 1613.4207248687744,
+    "back_rules_ms": 0.37980079650878906,
+    "fusion_ms": 0.21767616271972656,
+    "total_ms": 3283.0142974853516
+  }
+}
