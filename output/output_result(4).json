@@ -1,5 +1,3 @@
-Sai name, origin, residence, expiry_date
-
 {
   "success": true,
   "side_detected": [
@@ -15,8 +13,8 @@ Sai name, origin, residence, expiry_date
     "nationality": "Việt Nam",
     "origin": "Bình Hưng Hóa Bình Tân, TP. Hồ Chí Minh",
     "residence": "24/12/29 LK 2-10, 18 Bình Hưng Hòa Bình HCM",
-    "issue_date": "16/04/2021",
-    "expiry_date": "22/01/2028",
+    "issue_date": "13/08/2021",
+    "expiry_date": "16/06/2034",
     "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
     "father_name": null,
     "mother_name": null
@@ -42,20 +40,20 @@ Sai name, origin, residence, expiry_date
     "warnings": []
   },
   "timings": {
-    "front_align_ms": 4.581928253173828,
-    "qr_ms": 1036.4067554473877,
-    "front_ocr_det_ms": 1047.311544418335,
-    "front_ocr_rec_ms": 682.0011138916016,
-    "front_ocr_sort_ms": 0.48041343688964844,
-    "front_ocr_ms": 1729.830265045166,
-    "front_rules_ms": 0.38552284240722656,
-    "back_align_ms": 1.7387866973876953,
-    "back_ocr_det_ms": 1049.0312576293945,
-    "back_ocr_rec_ms": 534.5809459686279,
-    "back_ocr_sort_ms": 0.16498565673828125,
-    "back_ocr_ms": 1583.8100910186768,
-    "back_rules_ms": 0.13828277587890625,
-    "fusion_ms": 0.11754035949707031,
-    "total_ms": 4367.0783042907715
+    "front_align_ms": 2.8829574584960938,
+    "qr_ms": 712.4254703521729,
+    "front_ocr_det_ms": 1010.3213787078857,
+    "front_ocr_rec_ms": 690.8791065216064,
+    "front_ocr_sort_ms": 0.4851818084716797,
+    "front_ocr_ms": 1701.7230987548828,
+    "front_rules_ms": 0.41794776916503906,
+    "back_align_ms": 1.3267993927001953,
+    "back_ocr_det_ms": 990.058422088623,
+    "back_ocr_rec_ms": 603.7871837615967,
+    "back_ocr_sort_ms": 0.3752708435058594,
+    "back_ocr_ms": 1594.2537784576416,
+    "back_rules_ms": 0.14829635620117188,
+    "fusion_ms": 0.10085105895996094,
+    "total_ms": 4018.841505050659
   }
 }

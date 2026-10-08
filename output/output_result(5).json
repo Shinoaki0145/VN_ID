@@ -13,8 +13,8 @@
     "nationality": "Việt Nam",
     "origin": "Đông Phú, Lục Nam, Bắc Giang",
     "residence": "Thﾃｴn Trong, ﾄ静ｴng Phﾃｺ, L盻･c Nam, B蘯ｯc Giang",
-    "issue_date": "23/03/2021",
-    "expiry_date": "01/01/2033",
+    "issue_date": "16/04/2021",
+    "expiry_date": "22/01/2028",
     "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
     "father_name": null,
     "mother_name": null
@@ -27,7 +27,7 @@
     "nationality": "default",
     "origin": "front_rules",
     "residence": "qr",
-    "issue_date": "qr",
+    "issue_date": "back_rules",
     "issue_loc": "back_rules",
     "expiry_date": "back_rules"
   },
@@ -40,20 +40,20 @@
     "warnings": []
   },
   "timings": {
-    "front_align_ms": 2.251863479614258,
-    "qr_ms": 88.6390209197998,
-    "front_ocr_det_ms": 904.7811031341553,
-    "front_ocr_rec_ms": 820.3186988830566,
-    "front_ocr_sort_ms": 0.4837512969970703,
-    "front_ocr_ms": 1725.6150245666504,
-    "front_rules_ms": 0.4742145538330078,
-    "back_align_ms": 1.6326904296875,
-    "back_ocr_det_ms": 956.9263458251953,
-    "back_ocr_rec_ms": 542.8047180175781,
-    "back_ocr_sort_ms": 0.2644062042236328,
-    "back_ocr_ms": 1500.0243186950684,
-    "back_rules_ms": 0.4420280456542969,
-    "fusion_ms": 0.16832351684570312,
-    "total_ms": 3326.9617557525635
+    "front_align_ms": 2.689361572265625,
+    "qr_ms": 87.05830574035645,
+    "front_ocr_det_ms": 982.588529586792,
+    "front_ocr_rec_ms": 829.988956451416,
+    "front_ocr_sort_ms": 0.492095947265625,
+    "front_ocr_ms": 1813.1077289581299,
+    "front_rules_ms": 0.42748451232910156,
+    "back_align_ms": 1.585245132446289,
+    "back_ocr_det_ms": 1105.806827545166,
+    "back_ocr_rec_ms": 628.6463737487793,
+    "back_ocr_sort_ms": 0.32973289489746094,
+    "back_ocr_ms": 1734.8301410675049,
+    "back_rules_ms": 0.20956993103027344,
+    "fusion_ms": 0.1609325408935547,
+    "total_ms": 3649.474859237671
   }
 }

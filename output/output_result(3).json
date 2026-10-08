@@ -1,5 +1,3 @@
-Sai name
-
 {
   "success": true,
   "side_detected": [
@@ -15,9 +13,9 @@ Sai name
     "nationality": "Việt Nam",
     "origin": "Thị trấn Hiệp Phước Nhơn Trạch, Đồng Nai",
     "residence": "Tổ 10, Kp Phước Hiệp, Hiệp Phước, Nhơn Trạch, Đồng Nai",
-    "issue_date": "13/08/2021",
+    "issue_date": "22/04/2022",
     "expiry_date": "29/03/2037",
-    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "issue_loc": null,
     "father_name": null,
     "mother_name": null
   },
@@ -31,7 +29,6 @@ Sai name
     "origin": "front_rules",
     "residence": "qr",
     "issue_date": "back_rules",
-    "issue_loc": "back_rules",
     "expiry_date": "front_rules"
   },
   "validation": {
@@ -43,20 +40,20 @@ Sai name
     "warnings": []
   },
   "timings": {
-    "front_align_ms": 1.6541481018066406,
-    "qr_ms": 225.5992889404297,
-    "front_ocr_det_ms": 962.5899791717529,
-    "front_ocr_rec_ms": 805.6533336639404,
-    "front_ocr_sort_ms": 0.5464553833007812,
-    "front_ocr_ms": 1768.829107284546,
-    "front_rules_ms": 0.4222393035888672,
-    "back_align_ms": 1.1813640594482422,
-    "back_ocr_det_ms": 935.1816177368164,
-    "back_ocr_rec_ms": 619.8303699493408,
-    "back_ocr_sort_ms": 0.3726482391357422,
-    "back_ocr_ms": 1555.4132461547852,
-    "back_rules_ms": 0.7839202880859375,
-    "fusion_ms": 0.10395050048828125,
-    "total_ms": 3563.43674659729
+    "front_align_ms": 2.316713333129883,
+    "qr_ms": 179.31628227233887,
+    "front_ocr_det_ms": 993.7770366668701,
+    "front_ocr_rec_ms": 756.7040920257568,
+    "front_ocr_sort_ms": 0.5085468292236328,
+    "front_ocr_ms": 1751.028299331665,
+    "front_rules_ms": 1.3966560363769531,
+    "back_align_ms": 2.1190643310546875,
+    "back_ocr_det_ms": 957.5631618499756,
+    "back_ocr_rec_ms": 568.8447952270508,
+    "back_ocr_sort_ms": 0.8234977722167969,
+    "back_ocr_ms": 1527.2693634033203,
+    "back_rules_ms": 0.1628398895263672,
+    "fusion_ms": 0.3662109375,
+    "total_ms": 3482.832193374634
   }
 }

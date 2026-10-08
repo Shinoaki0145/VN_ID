@@ -1,0 +1,47 @@
+{
+  "success": true,
+  "side_detected": [
+    "back"
+  ],
+  "data": {
+    "id": null,
+    "cmnd_old": null,
+    "name": null,
+    "dob": null,
+    "gender": null,
+    "nationality": "Việt Nam",
+    "origin": null,
+    "residence": null,
+    "issue_date": "15/05/2022",
+    "expiry_date": null,
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "nationality": "default",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules"
+  },
+  "validation": {
+    "is_valid_12_digits": false,
+    "province_valid": false,
+    "gender_century_valid": false,
+    "birth_year_valid": false,
+    "address_fuzzy_score": 1.0,
+    "warnings": [
+      "Độ dài số CCCD không hợp lệ (yêu cầu đúng 12 chữ số)"
+    ]
+  },
+  "timings": {
+    "align_ms": 1.861572265625,
+    "qr_ms": 123.8710880279541,
+    "ocr_det_ms": 1010.3397369384766,
+    "ocr_rec_ms": 698.084831237793,
+    "ocr_sort_ms": 0.3483295440673828,
+    "ocr_ms": 1708.8141441345215,
+    "back_rules_ms": 0.2257823944091797,
+    "fusion_ms": 0.04172325134277344,
+    "total_ms": 1843.8560962677002
+  }
+}
