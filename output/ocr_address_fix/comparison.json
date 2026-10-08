@@ -1,0 +1,140 @@
+{
+  "front_cu_6.jpg": {
+    "before": {
+      "id": "024204000474",
+      "name": "BÙI HUY TUYỂN",
+      "dob": "24/01/2004",
+      "gender": "Nam",
+      "nationality": "Việt Nam",
+      "origin": "Đông Phú, Lục Nam, Bắc Giang",
+      "residence": "20102/2029 Đông Phú, Lục Nam, Bắc Giang",
+      "expiry_date": null,
+      "extraction_source": "front_rules",
+      "confidence_scores": {
+        "id": 0.99,
+        "name": 0.85,
+        "dob": 0.95
+      }
+    },
+    "after": {
+      "id": "024204000474",
+      "name": "BÙI HUY TUYỂN",
+      "dob": "24/01/2004",
+      "gender": "Nam",
+      "nationality": "Việt Nam",
+      "origin": "Đông Phú, Lục Nam, Bắc Giang",
+      "residence": "20102/2029 Đông Phú, Lục Nam, Bắc Giang",
+      "expiry_date": null,
+      "extraction_source": "front_rules",
+      "confidence_scores": {
+        "id": 0.99,
+        "name": 0.85,
+        "dob": 0.95
+      }
+    },
+    "before_ocr_ms": 12007.997989654541,
+    "after_ocr_ms": 11002.079963684082
+  },
+  "front_cu_7.jpg": {
+    "before": {
+      "id": "004083000675",
+      "name": "NGNG TRẦN HUY",
+      "dob": "13/12/1983",
+      "gender": "Nam",
+      "nationality": "Việt Nam",
+      "origin": "21202s Minh NGI THƯƠNG THÚ Tâm Nguyễn Binh Place ofresidence Cao Bằng",
+      "residence": "Cao Bằng",
+      "expiry_date": null,
+      "extraction_source": "front_rules",
+      "confidence_scores": {
+        "id": 0.99,
+        "name": 0.85,
+        "dob": 0.95
+      }
+    },
+    "after": {
+      "id": "004083000675",
+      "name": "NGNG TRẦN HUY",
+      "dob": "13/12/1983",
+      "gender": "Nam",
+      "nationality": "Việt Nam",
+      "origin": "21202s Minh NGI THƯƠNG THÚ Tâm Nguyễn Binh Place ofresidence Cao Bằng",
+      "residence": "Cao Bằng",
+      "expiry_date": null,
+      "extraction_source": "front_rules",
+      "confidence_scores": {
+        "id": 0.99,
+        "name": 0.85,
+        "dob": 0.95
+      }
+    },
+    "before_ocr_ms": 10252.43854522705,
+    "after_ocr_ms": 9345.57056427002
+  },
+  "back_cu_6.jpg": {
+    "before": {
+      "card_version": "cccd_chip_2021",
+      "issue_date": "16/04/2021",
+      "expiry_date": "22/01/2028",
+      "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+      "origin": null,
+      "residence": null,
+      "mrz_raw": null
+    },
+    "after": {
+      "card_version": "cccd_chip_2021",
+      "issue_date": "16/04/2021",
+      "expiry_date": "22/01/2028",
+      "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+      "origin": null,
+      "residence": null,
+      "mrz_raw": null
+    },
+    "before_ocr_ms": 9955.888032913208,
+    "after_ocr_ms": 9390.08378982544
+  },
+  "back_cu_7.jpg": {
+    "before": {
+      "card_version": "cccd_chip_2021",
+      "issue_date": null,
+      "expiry_date": "01/01/2033",
+      "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+      "origin": null,
+      "residence": null,
+      "mrz_raw": null
+    },
+    "after": {
+      "card_version": "cccd_chip_2021",
+      "issue_date": null,
+      "expiry_date": "01/01/2033",
+      "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+      "origin": null,
+      "residence": null,
+      "mrz_raw": null
+    },
+    "before_ocr_ms": 9971.577644348145,
+    "after_ocr_ms": 9079.82349395752
+  },
+  "back_moi_1.jpg": {
+    "before": {
+      "card_version": "can_cuoc_2024",
+      "issue_date": "18/11/2024",
+      "expiry_date": "14/09/2043",
+      "issue_loc": "Bộ Công an",
+      "origin": "ALLE, Phường Quận TP. Hồ Chí Minh",
+      "residence": "Khu DC Tam Bung, Phú Túc, Định Quán, Đồng Nai",
+      "mrz_raw": null
+    },
+    "after": {
+      "card_version": "can_cuoc_2024",
+      "issue_date": "18/11/2024",
+      "expiry_date": "14/09/2043",
+      "issue_loc": "Bộ Công an",
+      "origin": "Phường 7, Quận 8, TP. Hồ Chí Minh",
+      "residence": "Khu DC Tam Bung, Phú Túc, Định Quán, Đồng Nai",
+      "mrz_raw": null
+    },
+    "before_ocr_ms": 9933.964729309082,
+    "after_ocr_ms": 8287.096500396729
+  }
+}

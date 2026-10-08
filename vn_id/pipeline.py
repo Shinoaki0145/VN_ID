@@ -33,9 +33,9 @@ class CCCDPipeline:
             self.qr_decoder = MockQRDecoder()
         else:
             self.aligner = CardAligner()
-            self.ocr_engine = OCREngine(use_mock=False, device=self.device)
-            self.front_extractor = FrontRuleExtractor
             self.qr_decoder = QRDecoder(device=self.device)
+            self.ocr_engine = OCREngine(use_mock=False, device=self.device, qr_decoder=self.qr_decoder)
+            self.front_extractor = FrontRuleExtractor
 
     @staticmethod
     def _resolve_device(device: str) -> str:
@@ -220,4 +220,3 @@ class CCCDPipeline:
         timings["total_ms"] = total_ms
         fused_result.timings["total_ms"] = total_ms
         return fused_result
-

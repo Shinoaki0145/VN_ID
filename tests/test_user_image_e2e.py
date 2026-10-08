@@ -1,12 +1,80 @@
 import os
+from pathlib import Path
 import cv2
 import pytest
 from vn_id.parser import BackRuleExtractor as BackSideExtractor
 from vn_id.pipeline import CCCDPipeline
 from vn_id.validator.fusion import DataFusion
 from vn_id.core.schemas import CardSide
+from vn_id.core.config import EASYOCR_STORAGE_DIR, QR_WEIGHTS_DIR, VIETOCR_WEIGHTS_PATH
 
 USER_FIXTURE_PATH = "tests/fixtures/user_sample_back.png"
+
+
+@pytest.fixture(scope="module")
+def real_pipeline():
+    torch = pytest.importorskip("torch")
+    pytest.importorskip("easyocr")
+    pytest.importorskip("vietocr")
+    pytest.importorskip("qreader")
+    for weights in (
+        EASYOCR_STORAGE_DIR / "pretrained_ic15_res18.pt",
+        VIETOCR_WEIGHTS_PATH,
+        QR_WEIGHTS_DIR / "qrdet-s.pt",
+    ):
+        if not weights.is_file():
+            pytest.skip(f"Real OCR weights missing: {weights.name}")
+    original_threads = torch.get_num_threads()
+    torch.set_num_threads(min(original_threads, 4))
+    try:
+        yield CCCDPipeline(device="cpu")
+    finally:
+        torch.set_num_threads(original_threads)
+
+
+def real_image_path(name):
+    path = Path(__file__).resolve().parents[1] / "image" / name
+    if not path.is_file():
+        pytest.skip(f"Real image fixture missing: {name}")
+    return str(path)
+
+
+def test_can_cuoc_2024_origin_keeps_ward_and_district_numbers(real_pipeline):
+    image = CCCDPipeline.load_image(real_image_path("back_moi_1.jpg"))
+    aligned = real_pipeline.aligner.align(image).aligned_image
+
+    ocr = real_pipeline.ocr_engine.recognize(aligned, is_front=False)
+    result = BackSideExtractor.extract(ocr.full_text)
+
+    assert result.origin == "Phường 7, Quận 8, TP. Hồ Chí Minh"
+    assert result.issue_date == "18/11/2024"
+    assert result.expiry_date == "14/09/2043"
+    assert all(box.text != "ALLE" for box in ocr.boxes)
+
+
+def test_can_cuoc_2024_both_sides_origin(real_pipeline):
+    result = real_pipeline.process_both_sides(
+        real_image_path("front_moi_1.jpg"), real_image_path("back_moi_1.jpg"),
+    )
+
+    assert result.data.origin == "Phường 7, Quận 8, TP. Hồ Chí Minh"
+    assert result.field_sources["origin"] == "back_rules"
+    assert result.data.id == "079183034888"
+    assert result.data.name == "Huỳnh Thị Thanh Hiền"
+    assert result.data.issue_date == "18/11/2024"
+    assert result.data.expiry_date == "14/09/2043"
+
+
+def test_cccd_2021_back_preserves_issuer(real_pipeline):
+    image = CCCDPipeline.load_image(real_image_path("back_cu_7.jpg"))
+    aligned = real_pipeline.aligner.align(image).aligned_image
+
+    ocr = real_pipeline.ocr_engine.recognize(aligned, is_front=False)
+    result = BackSideExtractor.extract(ocr.full_text)
+
+    assert result.card_version == "cccd_chip_2021"
+    assert result.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
+    assert result.expiry_date == "01/01/2033"
 
 
 def test_user_fixture_exists_and_loads():
@@ -52,4 +120,3 @@ def test_real_user_back_side_data_fusion():
     assert final.data.issue_date == "24/06/2021"
     assert final.data.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
     assert "back" in final.side_detected
-

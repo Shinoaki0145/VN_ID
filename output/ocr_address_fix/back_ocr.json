@@ -1,0 +1,163 @@
+{
+  "boxes": [
+    {
+      "bbox": [
+        39,
+        27,
+        117,
+        59
+      ],
+      "text": "Nơi cư tr",
+      "confidence": 0.7680222458309598,
+      "line_number": 1
+    },
+    {
+      "bbox": [
+        101,
+        28,
+        209,
+        59
+      ],
+      "text": "lư trú//Placed",
+      "confidence": 0.7175857366195747,
+      "line_number": 1
+    },
+    {
+      "bbox": [
+        195,
+        27,
+        452,
+        66
+      ],
+      "text": "Reof residence: Khu DC",
+      "confidence": 0.8522256666963751,
+      "line_number": 1
+    },
+    {
+      "bbox": [
+        548,
+        27,
+        716,
+        69
+      ],
+      "text": "Tam Bung",
+      "confidence": 0.8994789943099022,
+      "line_number": 1
+    },
+    {
+      "bbox": [
+        36,
+        63,
+        524,
+        113
+      ],
+      "text": "Phú Túc, Định Quán, Đồng Nai",
+      "confidence": 0.8945075358663287,
+      "line_number": 2
+    },
+    {
+      "bbox": [
+        41,
+        118,
+        409,
+        155
+      ],
+      "text": "Nơi dang ký khai sinh /Place of birth:",
+      "confidence": 0.8383136744561949,
+      "line_number": 3
+    },
+    {
+      "bbox": [
+        37,
+        158,
+        597,
+        202
+      ],
+      "text": "Phường 7, Quận 8, TP. Hồ Chí Minh",
+      "confidence": 0.9020793022531451,
+      "line_number": 4
+    },
+    {
+      "bbox": [
+        325,
+        197,
+        673,
+        235
+      ],
+      "text": "Ngày, tháng, năm cấp / Date of issue:",
+      "confidence": 0.8631041138558775,
+      "line_number": 5
+    },
+    {
+      "bbox": [
+        330,
+        235,
+        513,
+        273
+      ],
+      "text": "18/11/2024",
+      "confidence": 0.9074018180370331,
+      "line_number": 6
+    },
+    {
+      "bbox": [
+        306,
+        261,
+        693,
+        301
+      ],
+      "text": "Ngày, tháng, năm hết hạn /Dalo d/Expiry",
+      "confidence": 0.7656387235873785,
+      "line_number": 7
+    },
+    {
+      "bbox": [
+        330,
+        297,
+        504,
+        333
+      ],
+      "text": "14/09/2043",
+      "confidence": 0.8864735841751099,
+      "line_number": 8
+    },
+    {
+      "bbox": [
+        277,
+        323,
+        460,
+        365
+      ],
+      "text": "BỘ CÔNG AN/",
+      "confidence": 0.8124292601238597,
+      "line_number": 9
+    },
+    {
+      "bbox": [
+        446,
+        329,
+        539,
+        365
+      ],
+      "text": "Jministryc",
+      "confidence": 0.696671561896801,
+      "line_number": 9
+    },
+    {
+      "bbox": [
+        529,
+        333,
+        722,
+        362
+      ],
+      "text": "YOF PUBUC SECURITY",
+      "confidence": 0.8097212144898044,
+      "line_number": 9
+    }
+  ],
+  "full_text": "Nơi cư tr lư trú//Placed Reof residence: Khu DC Tam Bung\nPhú Túc, Định Quán, Đồng Nai\nNơi dang ký khai sinh /Place of birth:\nPhường 7, Quận 8, TP. Hồ Chí Minh\nNgày, tháng, năm cấp / Date of issue:\n18/11/2024\nNgày, tháng, năm hết hạn /Dalo d/Expiry\n14/09/2043\nBỘ CÔNG AN/ Jministryc YOF PUBUC SECURITY",
+  "time_taken_ms": 8287.096500396729,
+  "det_time_ms": 8066.694021224976,
+  "rec_time_ms": 220.33452987670898,
+  "sort_time_ms": 0.06461143493652344
+}

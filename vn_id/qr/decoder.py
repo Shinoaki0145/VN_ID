@@ -97,6 +97,35 @@ class QRDecoder:
 
         return self._qreader
 
+    def mask_qr_regions(self, image: np.ndarray) -> np.ndarray:
+        """Hide detected QR polygons on an OCR-only copy of the image."""
+        masked = image.copy()
+        if image.size == 0:
+            return masked
+        try:
+            if image.ndim == 2:
+                rgb_image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            elif image.shape[2] == 4:
+                rgb_image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
+            else:
+                rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+            detections = self._get_qreader().detect(image=rgb_image)
+            white = 255 if image.ndim == 2 else (255,) * image.shape[2]
+            for detection in detections:
+                polygon = np.asarray(detection["quad_xy"], dtype=float)
+                if polygon.shape != (4, 2) or not np.isfinite(polygon).all():
+                    continue
+                polygon = np.rint(polygon).astype(np.int32)
+                if cv2.contourArea(polygon) > 0:
+                    # OpenCV clips the polygon to the image without deforming
+                    # rotated QR edges that extend beyond the frame.
+                    cv2.fillConvexPoly(masked, polygon, white)
+        except Exception:
+            # QR detection is optional; its failure must not prevent OCR.
+            return image.copy()
+        return masked
+
     @staticmethod
     def _normalize_date(date_str: str | None) -> str | None:
         """Normalizes date string to DD/MM/YYYY format (wraps central normalize_date)."""

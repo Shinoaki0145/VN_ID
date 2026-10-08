@@ -8,6 +8,60 @@ from vn_id.qr.decoder import QRDecoder
 from vn_id.qr.mock import MockQRDecoder
 
 
+@pytest.mark.parametrize("shape", [(64, 64), (64, 64, 3), (64, 64, 4)])
+def test_mask_qr_regions_preserves_input_and_text(shape):
+    image = np.full(shape, 17, dtype=np.uint8)
+    original = image.copy()
+    decoder = QRDecoder()
+    decoder._qreader = SimpleNamespace(detect=lambda **kwargs: ({
+        "quad_xy": np.array([[20, 20], [40, 20], [40, 40], [20, 40]], dtype=float),
+    },))
+
+    masked = decoder.mask_qr_regions(image)
+
+    expected = original.copy()
+    expected[20:41, 20:41] = 255
+    np.testing.assert_array_equal(masked, expected)
+    np.testing.assert_array_equal(image, original)
+    assert masked.shape == image.shape
+    assert masked.dtype == image.dtype
+    assert not np.shares_memory(masked, image)
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_mask_qr_regions_without_detection_or_on_failure(fails):
+    def detect(**kwargs):
+        if fails:
+            raise RuntimeError("QR detector unavailable")
+        return ()
+
+    image = np.full((64, 64, 3), 17, dtype=np.uint8)
+    decoder = QRDecoder()
+    decoder._qreader = SimpleNamespace(detect=detect)
+
+    masked = decoder.mask_qr_regions(image)
+
+    np.testing.assert_array_equal(masked, image)
+    assert not np.shares_memory(masked, image)
+
+
+def test_mask_qr_regions_clips_rotated_polygon():
+    image = np.zeros((64, 64, 3), dtype=np.uint8)
+    decoder = QRDecoder()
+    decoder._qreader = SimpleNamespace(detect=lambda **kwargs: ({
+        "quad_xy": np.array([[-4, 10], [10, -4], [24, 10], [10, 24]], dtype=float),
+    },))
+
+    masked = decoder.mask_qr_regions(image)
+
+    assert np.all(masked[10, 10] == 255)
+    assert np.all(masked[8, 0] == 255)
+    assert np.all(masked[0, 8] == 255)
+    assert np.all(masked[0, 0] == 0)  # Outside the rotated QR, inside its rectangle.
+    assert np.all(masked[40, 40] == 0)
+    assert not image.any()
+
+
 @pytest.mark.parametrize("decoded_name, expected_name", [
     ("B羅i Xu璽n Thu廕要", "Bùi Xuân Thuận"),
     ("Bﾃｹi Huy Tuy盻ハ", "Bùi Huy Tuyển"),
@@ -94,4 +148,3 @@ def test_qr_decoder_real_image():
         assert res.is_detected
         assert res.id == "054205010560"
         assert "Thiện Nhân" in res.name
-

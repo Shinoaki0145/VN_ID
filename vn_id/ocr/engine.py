@@ -16,14 +16,16 @@ from vn_id.core.config import (
 from vn_id.core.schemas import OCRResult, TextBox
 from vn_id.ocr.sorter import ReadingOrderSorter
 from vn_id.ocr.mock import MockOCREngine
+from vn_id.qr.decoder import QRDecoder
 
 
 class OCREngine:
     """OCR Engine managing text detection (DBNet) and recognition (VietOCR)."""
 
-    def __init__(self, use_mock: bool = False, device: str = "cpu"):
+    def __init__(self, use_mock: bool = False, device: str = "cpu", qr_decoder: QRDecoder | None = None):
         self.use_mock = use_mock
         self.device = device
+        self.qr_decoder = qr_decoder if qr_decoder is not None else QRDecoder(device=device)
         self.sorter = ReadingOrderSorter()
         self.mock_engine = MockOCREngine()
         self._detector = None
@@ -80,7 +82,12 @@ class OCREngine:
             recognizer = self._get_recognizer()
 
             t_det_start = time.time()
-            h_list, f_list = detector.detect(image)
+            masked_image = self.qr_decoder.mask_qr_regions(image)
+            # Back-side QR is the 2024 layout cue. Wider grouping keeps small
+            # address digits, while other layouts retain their original boxes.
+            has_back_qr = not is_front and not np.array_equal(image, masked_image)
+            image = masked_image
+            h_list, f_list = detector.detect(image, width_ths=2.0 if has_back_qr else 0.5)
             det_time_ms = (time.time() - t_det_start) * 1000.0
 
             boxes: list[TextBox] = []
