@@ -1,25 +1,53 @@
-import sys
-import types
+from pathlib import Path
+from types import SimpleNamespace
 
+import cv2
+import numpy as np
 import pytest
 from vn_id.qr.decoder import QRDecoder
 from vn_id.qr.mock import MockQRDecoder
 
 
-def test_qreader_reencodes_vietnamese_payload_as_utf8(monkeypatch):
-    options = {}
+@pytest.mark.parametrize("decoded_name, expected_name", [
+    ("B羅i Xu璽n Thu廕要", "Bùi Xuân Thuận"),
+    ("Bﾃｹi Huy Tuy盻ハ", "Bùi Huy Tuyển"),
+    ("N繫ng Tr廕吵 Huy", "Nông Trần Huy"),
+    ("Huỳnh Thị Thanh Hiền", "Huỳnh Thị Thanh Hiền"),
+])
+def test_qreader_restores_vietnamese_payload(monkeypatch, decoded_name, expected_name):
+    pytest.importorskip("qreader")
+    decoder = QRDecoder()
+    reader = decoder._get_qreader()
+    payload = f"001098012345||{decoded_name}|15081998|Nam|Hà Nội|25052021"
+    # Keep QReader's real text decoding; stub image detection and zbar's byte output.
+    monkeypatch.setattr(reader, "detect", lambda **kwargs: ({},))
+    monkeypatch.setattr(reader, "_decode_qr_zbar", lambda **kwargs: [
+        SimpleNamespace(result=SimpleNamespace(data=payload.encode("utf-8")))
+    ])
 
-    class FakeQReader:
-        def __init__(self, **kwargs):
-            options.update(kwargs)
+    result = decoder.decode(np.zeros((32, 32, 3), dtype=np.uint8))
 
-    qreader_module = types.ModuleType("qreader")
-    qreader_module.QReader = FakeQReader
-    monkeypatch.setitem(sys.modules, "qreader", qreader_module)
+    assert result.is_detected
+    assert result.name == expected_name
+    assert result.address == "Hà Nội"
 
-    QRDecoder()._get_qreader()
 
-    assert options["reencode_to"] == "cp65001"
+@pytest.mark.parametrize("image_name, expected_name, expected_address", [
+    ("front_cu_4.jpg", "Bùi Xuân Thuận", "Tổ 10, Kp Phước Hiệp, Hiệp Phước, Nhơn Trạch, Đồng Nai"),
+    ("front_cu_6.jpg", "Bùi Huy Tuyển", "Thôn Trong, Đông Phú, Lục Nam, Bắc Giang"),
+    ("front_cu_7.jpg", "Nông Trần Huy", "Tổ 11, Sông Bằng, Thành phố Cao Bằng, Cao Bằng"),
+])
+def test_qr_decoder_vietnamese_images(image_name, expected_name, expected_address):
+    pytest.importorskip("qreader")
+    path = Path(__file__).resolve().parents[1] / "image" / image_name
+    if not path.exists():
+        pytest.skip(f"Image fixture missing: {image_name}")
+
+    result = QRDecoder().decode(cv2.imread(str(path)))
+
+    assert result.is_detected
+    assert result.name == expected_name
+    assert result.address == expected_address
 
 def test_parse_valid_qr_payload():
     # Chuỗi QR chuẩn: Số CCCD | CMND cũ | Họ tên | Ngày sinh | Giới tính | Địa chỉ | Ngày cấp
@@ -66,5 +94,4 @@ def test_qr_decoder_real_image():
         assert res.is_detected
         assert res.id == "054205010560"
         assert "Thiện Nhân" in res.name
-
 

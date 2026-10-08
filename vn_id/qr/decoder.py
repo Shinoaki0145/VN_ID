@@ -72,7 +72,7 @@ class QRDecoder:
 
                 self._qreader = QReader(
                     weights_folder=weights_arg,
-                    reencode_to="cp65001",
+                    reencode_to=None,
                 )
 
             if str(self.device).startswith("cuda"):
@@ -102,6 +102,16 @@ class QRDecoder:
         """Normalizes date string to DD/MM/YYYY format (wraps central normalize_date)."""
         return normalize_date(date_str)
 
+    @staticmethod
+    def _restore_utf8(text: str) -> str:
+        """Undo zbar's Big5/Shift-JIS guess for an individual QR field."""
+        for encoding in ("big5", "shift_jis"):
+            try:
+                return unicodedata.normalize("NFC", text.encode(encoding).decode("utf-8"))
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                continue
+        return unicodedata.normalize("NFC", text)
+
     @classmethod
     def parse_payload(cls, raw_text: str | None) -> QRResult:
         """Parses pipe-delimited CCCD QR payload."""
@@ -109,7 +119,9 @@ class QRDecoder:
             return QRResult(is_detected=False, raw_payload=raw_text)
 
         raw_text = unicodedata.normalize("NFC", raw_text)
-        parts = raw_text.split("|")
+        # QR segments can use different encodings: the name may be mojibake
+        # while the address is already UTF-8. Repair fields independently.
+        parts = [cls._restore_utf8(part) for part in raw_text.split("|")]
         # Standard CCCD has 6 or 7 parts:
         # [0]: ID (12 digits)
         # [1]: CMND_OLD (9 digits, optional)
@@ -185,4 +197,3 @@ class QRDecoder:
             pass
         
         return QRResult(is_detected=False)
-
