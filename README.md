@@ -21,6 +21,11 @@ Hệ thống trích xuất thông tin tự động, toàn diện từ ảnh Căn
    - Đối soát chéo 12 số định danh: Kiểm tra tính hợp lệ của mã 63 tỉnh/thành, chữ số thế kỷ & giới tính, 2 chữ số năm sinh.
    - Tự động suy luận giới tính từ chữ số thứ 4 của mã số CCCD nếu hình ảnh bị mờ trường giới tính.
    - Chuẩn hóa Unicode tiếng Việt chuẩn dựng sẵn (NFC).
+   - MRZ mặt sau CCCD 2021 bổ sung `id`, `dob`, `gender`, `expiry_date` khi thiếu, với `field_sources` là `mrz`; dữ liệu QR/chữ in vẫn được ưu tiên.
+   - Khi ID bị che hoặc không đọc được, dòng MRZ có checksum ngày sinh hợp lệ vẫn cung cấp giới tính (`M` → `Nam`, `F` → `Nữ`). Ngày sinh đầy đủ giữ `null` nếu chưa xác định được thế kỷ từ ID.
+   - `validation.mrz_checks` ghi kết quả đối chiếu từng trường (`true` = khớp, `false` = lệch). Trường điền trực tiếp từ MRZ không được coi là đã đối chiếu độc lập.
+   - `validation.mrz_checksums` ghi các phép kiểm tra checksum: `document_number`, `dob`, `expiry_date`, `composite`; `null` nghĩa là chưa đủ ký tự để kiểm tra.
+   - MRZ bị cắt mất phần cuối vẫn có thể cung cấp dữ liệu theo vị trí ký tự. MRZ không cung cấp ngày cấp, nơi cấp hoặc tên tiếng Việt có dấu.
 4. **Đo Độ Trễ (Latency Breakdown) Toàn Diện & Chi Tiết**:
    - Đo đạc chính xác thời gian thực thi (milliseconds) của từng bước độc lập:
      - `front_align_ms`, `back_align_ms` (Căn chỉnh 4 góc thẻ).
@@ -52,6 +57,7 @@ VN_ID/
 │   │   ├── common.py          # Regex patterns chung (ngày tháng, cư trú, khai sinh)
 │   │   ├── front.py           # FrontRuleExtractor (bóc tách mặt trước)
 │   │   ├── back.py            # BackRuleExtractor (bóc tách mặt sau 2021 & 2024, MRZ)
+│   │   ├── mrz.py             # MRZ CCCD theo vị trí ký tự, checksum và ngày hợp lệ
 │   │   └── mock.py            # MockRuleExtractor cho kiểm thử độc lập
 │   ├── qr/                    # Giải mã mã QR (QReader + zxing-cpp)
 │   ├── validator/             # Đối soát 12 số CCCD, hợp nhất dữ liệu (DataFusion), chuẩn hóa địa chỉ

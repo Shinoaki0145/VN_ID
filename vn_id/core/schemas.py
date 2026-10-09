@@ -31,6 +31,7 @@ class TextBox(BaseModel):
 class OCRResult(BaseModel):
     boxes: list[TextBox] = Field(default_factory=list)
     full_text: str = ""
+    mrz_text: str | None = None
     time_taken_ms: float = 0.0
     det_time_ms: float = 0.0
     rec_time_ms: float = 0.0
@@ -56,6 +57,16 @@ FrontExtractResult = FrontSideResult
 NERResult = FrontSideResult
 
 
+class MRZResult(BaseModel):
+    raw_text: str = ""
+    id: str | None = None
+    dob: str | None = None
+    gender: str | None = None
+    expiry_date: str | None = None
+    checksums: dict[str, bool | None] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class BackSideResult(BaseModel):
     card_version: str = "unknown"  # "cccd_chip_2021" | "can_cuoc_2024" | "unknown"
     issue_date: str | None = None  # DD/MM/YYYY
@@ -64,6 +75,7 @@ class BackSideResult(BaseModel):
     origin: str | None = None  # Nơi đăng ký khai sinh (Thẻ Căn cước 2024)
     residence: str | None = None  # Nơi cư trú (Thẻ Căn cước 2024)
     mrz_raw: str | None = None
+    mrz: MRZResult | None = None
     raw_text: str = ""
 
 
@@ -87,6 +99,8 @@ class ValidationReport(BaseModel):
     gender_century_valid: bool = False
     birth_year_valid: bool = False
     address_fuzzy_score: float = 1.0
+    mrz_checks: dict[str, bool] = Field(default_factory=dict)
+    mrz_checksums: dict[str, bool | None] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -122,4 +136,3 @@ class FinalCCCDResult(BaseModel):
     field_sources: dict[str, str] = Field(default_factory=dict)
     validation: ValidationReport = Field(default_factory=ValidationReport)
     timings: dict[str, float] = Field(default_factory=dict)
-

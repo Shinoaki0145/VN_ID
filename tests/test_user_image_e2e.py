@@ -77,6 +77,37 @@ def test_cccd_2021_back_preserves_issuer(real_pipeline):
     assert result.expiry_date == "01/01/2033"
 
 
+@pytest.mark.parametrize("image_name,id_num,dob,issue_date,expiry_date", [
+    ("back_cu_8.jpg", "046069005251", "28/04/1969", "15/08/2021", "28/04/2029"),
+    ("back_cu_14.jpg", "052206009281", "25/04/2006", "08/05/2022", "25/04/2031"),
+    ("back_cu_16.jpg", "038068030449", "13/12/1968", "30/06/2022", "13/12/2028"),
+    ("back_cu_18.jpg", "024091011267", "16/08/1991", "15/05/2022", "16/08/2031"),
+])
+def test_cccd_back_group_8_to_11_fills_identity_and_dates(
+    real_pipeline, image_name, id_num, dob, issue_date, expiry_date,
+):
+    result = real_pipeline.process(real_image_path(image_name), force_side=CardSide.BACK)
+    assert result.data.id == id_num
+    assert result.data.dob == dob
+    assert result.data.gender == "Nam"
+    assert result.data.issue_date == issue_date
+    assert result.data.expiry_date == expiry_date
+    assert result.data.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
+    assert result.field_sources["id"] == "mrz"
+    assert result.field_sources["expiry_date"] == "mrz"
+
+
+def test_redacted_cccd_back_reads_gender_without_guessing_birth_century(real_pipeline):
+    result = real_pipeline.process(real_image_path("back_cu_3.png"), force_side=CardSide.BACK)
+    assert result.data.id is None
+    assert result.data.dob is None
+    assert result.data.gender == "Nam"
+    assert result.field_sources["gender"] == "mrz"
+    assert result.data.issue_date == "24/06/2021"
+    assert result.data.expiry_date == "01/06/2033"
+    assert result.data.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
+
+
 def test_user_fixture_exists_and_loads():
     assert os.path.exists(USER_FIXTURE_PATH)
     img = CCCDPipeline.load_image(USER_FIXTURE_PATH)

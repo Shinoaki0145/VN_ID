@@ -1,5 +1,6 @@
 """OCR Engine with DBNet detector and VietOCR recognizer."""
 import os
+import re
 import time
 import unicodedata
 from typing import Any
@@ -30,6 +31,7 @@ class OCREngine:
         self.mock_engine = MockOCREngine()
         self._detector = None
         self._recognizer = None
+        self._mrz_reader = None
 
     def _get_detector(self):
         if self._detector is None:
@@ -67,6 +69,44 @@ class OCREngine:
             config["device"] = "cuda" if self.device == "cuda" else "cpu"
             self._recognizer = Predictor(config)
         return self._recognizer
+
+    def _get_mrz_reader(self):
+        if self._mrz_reader is None:
+            import easyocr
+
+            # vi/en shares the already installed latin_g2 recognizer.
+            self._mrz_reader = easyocr.Reader(
+                ["vi", "en"], gpu=self.device == "cuda", detector=False,
+                model_storage_directory=str(EASYOCR_STORAGE_DIR),
+                user_network_directory=str(EASYOCR_USER_NETWORK_DIR),
+                download_enabled=False, verbose=False,
+            )
+        return self._mrz_reader
+
+    def _recognize_mrz(self, image: np.ndarray) -> str:
+        """Read complete MRZ lines instead of Vietnamese fragments/filler guesses."""
+        roi = image[int(image.shape[0] * 0.6):]
+        horizontal, free = self._get_detector().detect(roi, width_ths=2.0)
+        boxes = [
+            TextBox(bbox=[int(b[0]), int(b[2]), int(b[1]), int(b[3])], text="")
+            for b in (horizontal[0] if horizontal else [])
+        ]
+        for polygon in (free[0] if free else []):
+            x, y, width, height = cv2.boundingRect(np.asarray(polygon, dtype=np.float32))
+            boxes.append(TextBox(bbox=[x, y, x + width, y + height], text=""))
+        lines = self.sorter._group_and_sort_lines(boxes)
+        bounds = [
+            [min(b.bbox[0] for b in line), max(b.bbox[2] for b in line),
+             min(b.bbox[1] for b in line), max(b.bbox[3] for b in line)]
+            for line in lines
+        ]
+        if not bounds:
+            return ""
+        recognized = self._get_mrz_reader().recognize(
+            cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY), horizontal_list=bounds, free_list=[],
+            allowlist="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<", decoder="greedy", detail=1,
+        )
+        return "\n".join(text for _, text, _ in recognized)
 
     def recognize(self, image: np.ndarray, is_front: bool = True) -> OCRResult:
         """Run OCR on image using DBNet (detection) + VietOCR (recognition) + ReadingOrderSorter."""
@@ -142,6 +182,18 @@ class OCREngine:
             t_sort_start = time.time()
             sorted_ocr = self.sorter.sort_boxes(boxes)
             sort_time_ms = (time.time() - t_sort_start) * 1000.0
+
+            # This optional pass must never discard the ordinary OCR result.
+            if not is_front and (
+                "IDVNM" in re.sub(r"\s+", "", sorted_ocr.full_text.upper())
+                or re.search(r"[\dOIL]{7}[MF<][\dOIL]{7}VNM", sorted_ocr.full_text.upper())
+            ):
+                t_mrz_start = time.time()
+                try:
+                    sorted_ocr.mrz_text = self._recognize_mrz(image) or None
+                except Exception:
+                    pass
+                rec_time_ms += (time.time() - t_mrz_start) * 1000.0
 
             sorted_ocr.time_taken_ms = (time.time() - t0) * 1000.0
             sorted_ocr.det_time_ms = det_time_ms

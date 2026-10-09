@@ -10,15 +10,18 @@ from vn_id.parser.common import (
     HEADER_EXCLUSIONS_BACK,
     clean_address_value,
 )
+from vn_id.parser.mrz import parse_mrz
 
 
 class BackRuleExtractor:
     """Extracts issue date, expiry date, issuer location, and addresses from card back text."""
 
     @classmethod
-    def extract(cls, text: str) -> BackSideResult:
-        if not text:
+    def extract(cls, text: str, mrz_text: str | None = None) -> BackSideResult:
+        if not text and not mrz_text:
             return BackSideResult(raw_text="")
+
+        mrz = parse_mrz(text, mrz_text)
 
         clean_text = remove_accents(text).upper()
 
@@ -46,6 +49,7 @@ class BackRuleExtractor:
             or "DATE" in clean_text
             or "NGAY" in clean_text
             or "IDVNM" in clean_text
+            or mrz is not None
         )
 
         version = "can_cuoc_2024" if is_2024 else ("cccd_chip_2021" if is_2021 else "unknown")
@@ -182,14 +186,8 @@ class BackRuleExtractor:
             ):
                 issue_loc = POLICE_DEPT_ISSUER
 
-            # Extract expiry date from MRZ line 2 if present
-            if not expiry_date:
-                m_mrz = re.search(r"(\d{6})\d[MFmf](\d{6})\d", clean_text)
-                if m_mrz:
-                    exp_raw = m_mrz.group(2)
-                    yy, mm, dd = int(exp_raw[:2]), exp_raw[2:4], exp_raw[4:6]
-                    full_year = 2000 + yy if yy < 50 else 1900 + yy
-                    expiry_date = normalize_date(dd, mm, str(full_year))
+            if mrz:
+                expiry_date = mrz.expiry_date
 
         return BackSideResult(
             card_version=version,
@@ -198,6 +196,7 @@ class BackRuleExtractor:
             issue_loc=issue_loc,
             origin=origin,
             residence=residence,
+            mrz=mrz,
+            mrz_raw=mrz.raw_text if mrz else None,
             raw_text=text,
         )
-

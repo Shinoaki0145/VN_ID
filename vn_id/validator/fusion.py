@@ -82,9 +82,6 @@ class DataFusion:
         elif front_res and front_res.gender:
             data.gender = front_res.gender
             field_sources["gender"] = "front_rules"
-        elif data.id and len(data.id) == 12 and data.id.isdigit():
-            data.gender = "Nam" if int(data.id[3]) % 2 == 0 else "Nữ"
-            field_sources["gender"] = "id_deduced"
 
         # Nationality
         data.nationality = "Việt Nam"
@@ -130,7 +127,34 @@ class DataFusion:
             field_sources["expiry_date"] = "front_rules"
         elif back and back.expiry_date:
             data.expiry_date = back.expiry_date
-            field_sources["expiry_date"] = "back_rules"
+            field_sources["expiry_date"] = (
+                "mrz" if back.mrz and back.card_version != "can_cuoc_2024"
+                and back.expiry_date == back.mrz.expiry_date else "back_rules"
+            )
+
+        # Validated MRZ fills gaps after QR and printed fields.
+        mrz = back.mrz if back else None
+        mrz_checks: dict[str, bool] = {}
+        mrz_warnings: list[str] = []
+        if mrz:
+            mrz_warnings.extend(mrz.warnings)
+            for field in ("id", "dob", "gender", "expiry_date"):
+                candidate = getattr(mrz, field)
+                existing = getattr(data, field)
+                if not candidate:
+                    continue
+                if not existing:
+                    setattr(data, field, candidate)
+                    field_sources[field] = "mrz"
+                elif field_sources.get(field) != "mrz":
+                    matches = unicodedata.normalize("NFC", existing.strip()) == candidate
+                    mrz_checks[field] = matches
+                    if not matches:
+                        mrz_warnings.append(f"MRZ {field}: {candidate} differs from {field_sources[field]} value {existing}.")
+
+        if not data.gender and data.id and len(data.id) == 12 and data.id.isdigit():
+            data.gender = "Nam" if int(data.id[3]) % 2 == 0 else "Nữ"
+            field_sources["gender"] = "id_deduced"
 
         # If issue date not filled from back, check QR
         if not data.issue_date and qr and qr.is_detected and qr.issue_date:
@@ -152,6 +176,9 @@ class DataFusion:
             dob=data.dob,
             gender=data.gender,
         )
+        validation.mrz_checks = mrz_checks
+        validation.mrz_checksums = dict(mrz.checksums) if mrz else {}
+        validation.warnings.extend(mrz_warnings)
 
         # Ensure all fields are normalized to standard Unicode NFC precomposed form
         for field_name in [

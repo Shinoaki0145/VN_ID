@@ -137,7 +137,7 @@ class CCCDPipeline:
             timings["ocr_ms"] = (time.time() - t_ocr) * 1000.0
 
             t_back = time.time()
-            back_res = BackRuleExtractor.extract(ocr_res.full_text)
+            back_res = BackRuleExtractor.extract(ocr_res.full_text, mrz_text=ocr_res.mrz_text)
             timings["back_rules_ms"] = (time.time() - t_back) * 1000.0
 
             fused_result = DataFusion.fuse(
@@ -206,7 +206,7 @@ class CCCDPipeline:
         timings["back_ocr_ms"] = (time.time() - t_ocr_back) * 1000.0
 
         t_back_rules = time.time()
-        back_res = BackRuleExtractor.extract(ocr_back.full_text)
+        back_res = BackRuleExtractor.extract(ocr_back.full_text, mrz_text=ocr_back.mrz_text)
         timings["back_rules_ms"] = (time.time() - t_back_rules) * 1000.0
 
         fused_result = DataFusion.fuse(

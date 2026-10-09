@@ -41,6 +41,43 @@ def test_pipeline_shares_qr_decoder_with_ocr():
     assert pipeline.ocr_engine.qr_decoder is pipeline.qr_decoder
 
 
+def test_mrz_recognition_merges_fragments_into_whole_lines():
+    engine = OCREngine()
+    seen = {}
+
+    def recognize(gray, **kwargs):
+        seen.update(kwargs)
+        return [(None, "IDVNM0690052512046069005251", 0.9), (None, "6904281M2904283VNM", 0.9)]
+
+    engine._detector = SimpleNamespace(detect=lambda *args, **kwargs: (
+        [[[10, 120, 10, 30], [125, 280, 11, 31], [10, 280, 55, 75]]], [[]],
+    ))
+    engine._mrz_reader = SimpleNamespace(recognize=recognize)
+    result = engine._recognize_mrz(np.zeros((200, 300, 3), dtype=np.uint8))
+    assert result == "IDVNM0690052512046069005251\n6904281M2904283VNM"
+    assert seen["horizontal_list"] == [[10, 280, 10, 31], [10, 280, 55, 75]]
+    assert seen["allowlist"] == "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<"
+
+
+def test_optional_mrz_failure_preserves_ordinary_back_ocr():
+    engine = OCREngine()
+    engine.qr_decoder._qreader = SimpleNamespace(detect=lambda **kwargs: ())
+    engine._detector = SimpleNamespace(detect=lambda *args, **kwargs: ([[[10, 290, 10, 35]]], [[]]))
+    engine._recognizer = SimpleNamespace(predict=lambda *args, **kwargs: ("IDVNM0690052512046069005251", 0.9))
+
+    attempted = []
+
+    def unavailable(*args):
+        attempted.append(True)
+        raise RuntimeError("Optional Latin model unavailable")
+
+    engine._recognize_mrz = unavailable
+    result = engine.recognize(np.zeros((200, 300, 3), dtype=np.uint8), is_front=False)
+    assert result.full_text == "IDVNM0690052512046069005251"
+    assert result.mrz_text is None
+    assert attempted
+
+
 @pytest.mark.parametrize("is_front, second_x, has_qr", [
     (True, 120, False), (False, 150, True), (False, 120, False),
 ])
