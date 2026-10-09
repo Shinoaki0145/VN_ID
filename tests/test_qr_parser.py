@@ -1,11 +1,30 @@
 from pathlib import Path
 from types import SimpleNamespace
+import sys
 
 import cv2
 import numpy as np
 import pytest
 from vn_id.qr.decoder import QRDecoder
 from vn_id.qr.mock import MockQRDecoder
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_decode_uses_only_qreader(monkeypatch, fails):
+    payload = "001098012345||NGUYỄN VĂN A|15081998|Nam|Hà Nội|25052021"
+    monkeypatch.setitem(sys.modules, "zxingcpp", SimpleNamespace(
+        read_barcodes=lambda image: [SimpleNamespace(text=payload)],
+    ))
+
+    def detect_and_decode(**kwargs):
+        if fails:
+            raise RuntimeError("QReader unavailable")
+        return ()
+
+    decoder = QRDecoder()
+    decoder._qreader = SimpleNamespace(detect_and_decode=detect_and_decode)
+
+    assert not decoder.decode(np.zeros((32, 32, 3), dtype=np.uint8)).is_detected
 
 
 @pytest.mark.parametrize("shape", [(64, 64), (64, 64, 3), (64, 64, 4)])

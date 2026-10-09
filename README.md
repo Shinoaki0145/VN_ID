@@ -12,8 +12,8 @@ Hệ thống trích xuất thông tin tự động, toàn diện từ ảnh Căn
    - **Text Detector**: Sử dụng mô hình DBNet18 (EasyOCR) phát hiện bounding box chữ chính xác.
    - **Text Recognizer**: Sử dụng mô hình VietOCR (VGG Seq2Seq) tối ưu cho tiếng Việt có dấu với cơ chế đệm an toàn `pad_y = 4`, `pad_x = 2` bảo toàn trọn vẹn dấu thanh (`?`, `~`, `.`).
    - **Bóc tách thực thể thuần Regex Rules**: Bóc tách họ tên, số định danh, ngày sinh, quê quán, nơi cư trú, hạn sử dụng, cơ quan cấp và MRZ với tốc độ siêu nhanh ($\approx 1\text{ms}$), không phụ thuộc mô hình NER nặng nề.
-2. **Multi-Fallback QR Decoder (Ground Truth Accuracy)**:
-   - Sử dụng **QReader (YOLOv8 + pyzbar)** kết hợp dự phòng **zxing-cpp**.
+2. **QR Decoder (QReader)**:
+   - Sử dụng **QReader (YOLOv8 + pyzbar)** để phát hiện và giải mã QR.
    - Tự động crop và giải mã vùng QR theo từng mặt (mặt trước cho CCCD 2021 và mặt sau góc trên cho Căn cước 2024).
    - Khi đọc được QR code, dữ liệu đạt độ chính xác 100%, triệt tiêu hoàn toàn sai sót từ OCR.
 3. **Data Fusion & Đối Soát Nghiệp Vụ Tự Động**:
@@ -59,7 +59,7 @@ VN_ID/
 │   │   ├── back.py            # BackRuleExtractor (bóc tách mặt sau 2021 & 2024, MRZ)
 │   │   ├── mrz.py             # MRZ CCCD theo vị trí ký tự, checksum và ngày hợp lệ
 │   │   └── mock.py            # MockRuleExtractor cho kiểm thử độc lập
-│   ├── qr/                    # Giải mã mã QR (QReader + zxing-cpp)
+│   ├── qr/                    # Giải mã mã QR (QReader)
 │   ├── validator/             # Đối soát 12 số CCCD, hợp nhất dữ liệu (DataFusion), chuẩn hóa địa chỉ
 │   ├── api/                   # REST API backend (FastAPI)
 │   └── cli/                   # Giao diện dòng lệnh CLI (Click)

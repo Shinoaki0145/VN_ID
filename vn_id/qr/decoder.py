@@ -10,7 +10,7 @@ from vn_id.core.utils import normalize_date
 
 
 class QRDecoder:
-    """Decodes QR codes from CCCD card images using QReader with zxing-cpp fallback."""
+    """Decodes QR codes from CCCD card images using QReader."""
 
     def __init__(self, device: str = "cpu"):
         self.device = str(device).lower()
@@ -190,11 +190,10 @@ class QRDecoder:
         )
 
     def decode(self, image: np.ndarray | None) -> QRResult:
-        """Detect and decode QR code using QReader with zxing-cpp fallback."""
+        """Detect and decode QR code using QReader."""
         if image is None or image.size == 0:
             return QRResult(is_detected=False)
 
-        # 1. Primary: QReader (YOLOv8 QR detector + multi-step pyzbar decoder)
         try:
             if len(image.shape) == 2:
                 rgb_image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
@@ -213,16 +212,4 @@ class QRDecoder:
         except Exception:
             pass
 
-        # 2. Fallback: zxing-cpp
-        try:
-            import zxingcpp
-            results = zxingcpp.read_barcodes(image)
-            for r in results:
-                if r.text and "|" in r.text:
-                    parsed = self.parse_payload(r.text)
-                    if parsed.is_detected:
-                        return parsed
-        except Exception:
-            pass
-        
         return QRResult(is_detected=False)
