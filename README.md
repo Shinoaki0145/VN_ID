@@ -131,6 +131,21 @@ Mở notebook để xem trực quan hình ảnh thẻ, kết quả trích xuất
 jupyter notebook test_pipeline.ipynb
 ```
 
+Lần đầu đọc MRZ, pipeline tự tải model `latin_g2.pth` vào `.easyocr_models/model/` nếu thiếu (ví dụ trên Colab mới). Nếu tải hoặc đọc MRZ thất bại, log ghi nguyên nhân và pipeline tiếp tục dùng OCR thông thường.
+
+DBNet dùng `canvas_size=1600` cho ảnh thẻ và `640` cho vùng MRZ để giới hạn kích thước xử lý. OCR giữ nguyên thiết bị đã chọn, kể cả khi gặp CUDA OOM; lỗi được ghi vào log và không tự chuyển sang CPU.
+
+Trên Colab, sau khi cập nhật mã nguồn cần dừng process đang giữ phiên bản cũ rồi chạy lại cell xử lý ảnh (mục 6):
+
+```python
+if "vnid_worker" in globals():
+    vnid_worker.terminate()
+    vnid_worker.wait()
+    del vnid_worker
+```
+
+Nếu bước MRZ gặp OOM, pipeline giữ phần OCR đã đọc thành công và ghi nguyên nhân vào log.
+
 ### 4. Dùng Giao Diện Dòng Lệnh (CLI)
 
 ```bash

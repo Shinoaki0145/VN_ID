@@ -1,5 +1,6 @@
 """OCR Engine with DBNet detector and VietOCR recognizer."""
 import os
+import logging
 import re
 import time
 import unicodedata
@@ -18,6 +19,9 @@ from vn_id.core.schemas import OCRResult, TextBox
 from vn_id.ocr.sorter import ReadingOrderSorter
 from vn_id.ocr.mock import MockOCREngine
 from vn_id.qr.decoder import QRDecoder
+
+
+logger = logging.getLogger(__name__)
 
 
 class OCREngine:
@@ -74,19 +78,21 @@ class OCREngine:
         if self._mrz_reader is None:
             import easyocr
 
-            # vi/en shares the already installed latin_g2 recognizer.
+            # Fresh environments (including Colab) need the Latin weights too.
             self._mrz_reader = easyocr.Reader(
                 ["vi", "en"], gpu=self.device == "cuda", detector=False,
                 model_storage_directory=str(EASYOCR_STORAGE_DIR),
                 user_network_directory=str(EASYOCR_USER_NETWORK_DIR),
-                download_enabled=False, verbose=False,
+                download_enabled=True, verbose=False,
             )
         return self._mrz_reader
 
     def _recognize_mrz(self, image: np.ndarray) -> str:
         """Read complete MRZ lines instead of Vietnamese fragments/filler guesses."""
         roi = image[int(image.shape[0] * 0.6):]
-        horizontal, free = self._get_detector().detect(roi, width_ths=2.0)
+        # DBNet treats canvas_size as the SHORT side. Its default 2560 would
+        # inflate this narrow ROI to roughly 10176x2560, exhausting Colab VRAM.
+        horizontal, free = self._get_detector().detect(roi, width_ths=2.0, canvas_size=640)
         boxes = [
             TextBox(bbox=[int(b[0]), int(b[2]), int(b[1]), int(b[3])], text="")
             for b in (horizontal[0] if horizontal else [])
@@ -127,7 +133,7 @@ class OCREngine:
             # address digits, while other layouts retain their original boxes.
             has_back_qr = not is_front and not np.array_equal(image, masked_image)
             image = masked_image
-            h_list, f_list = detector.detect(image, width_ths=2.0 if has_back_qr else 0.5)
+            h_list, f_list = detector.detect(image, width_ths=2.0 if has_back_qr else 0.5, canvas_size=1600)
             det_time_ms = (time.time() - t_det_start) * 1000.0
 
             boxes: list[TextBox] = []
@@ -164,8 +170,8 @@ class OCREngine:
                                     confidence=float(prob),
                                 )
                             )
-                    except Exception:
-                        pass
+                    except Exception as error:
+                        logger.warning("Text recognition unavailable: %s", str(error))
             rec_time_ms = (time.time() - t_rec_start) * 1000.0
 
             if not boxes:
@@ -191,8 +197,8 @@ class OCREngine:
                 t_mrz_start = time.time()
                 try:
                     sorted_ocr.mrz_text = self._recognize_mrz(image) or None
-                except Exception:
-                    pass
+                except Exception as error:
+                    logger.warning("MRZ recognition unavailable; keeping ordinary OCR: %s", error)
                 rec_time_ms += (time.time() - t_mrz_start) * 1000.0
 
             sorted_ocr.time_taken_ms = (time.time() - t0) * 1000.0
@@ -201,6 +207,7 @@ class OCREngine:
             sorted_ocr.sort_time_ms = sort_time_ms
             return sorted_ocr
 
-        except Exception:
+        except Exception as error:
+            logger.warning("OCR unavailable: %s", str(error))
             duration_ms = (time.time() - t0) * 1000.0
             return OCRResult(boxes=[], full_text="", time_taken_ms=duration_ms)

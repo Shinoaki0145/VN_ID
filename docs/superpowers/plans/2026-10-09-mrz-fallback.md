@@ -17,7 +17,7 @@
 - Preserve QR/front priority and report disagreements; never silently replace existing fields.
 - MRZ supplies no issue date, issuer, or accented name.
 - Reject failed checksums and impossible calendar dates; derive DOB century from verified CCCD ID.
-- Preserve ordinary OCR when optional Latin recognition fails; do not download additional models.
+- Preserve ordinary OCR when optional Latin recognition fails and log the failure; provision the required Latin weights when missing, including on fresh Colab deployments.
 - Save fresh outputs separately from the original output snapshots.
 
 ## Review Focus
