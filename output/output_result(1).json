@@ -1,0 +1,74 @@
+{
+  "success": true,
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "040098020586",
+    "cmnd_old": null,
+    "name": "CONGHOO HOLCHONGHINIMAN",
+    "dob": "19/03/1998",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "Nghệ An",
+    "residence": "Nghệ An",
+    "issue_date": "20/08/2021",
+    "expiry_date": "19/03/2026",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "front_rules",
+    "name": "front_rules",
+    "dob": "front_rules",
+    "gender": "front_rules",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "front_rules",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "mrz"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": false
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": null
+    },
+    "warnings": [
+      "MRZ id: 010301004673 differs from front_rules value 040098020586.",
+      "MRZ dob: 19/03/2001 differs from front_rules value 19/03/1998.",
+      "MRZ gender: Nữ differs from front_rules value Nam."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 16.463279724121094,
+    "qr_ms": 777.4629592895508,
+    "front_ocr_det_ms": 487.011194229126,
+    "front_ocr_rec_ms": 462.22972869873047,
+    "front_ocr_sort_ms": 0.2703666687011719,
+    "front_ocr_ms": 949.5480060577393,
+    "front_rules_ms": 1.065969467163086,
+    "back_align_ms": 24.865150451660156,
+    "back_ocr_det_ms": 392.29726791381836,
+    "back_ocr_rec_ms": 871.6282844543457,
+    "back_ocr_sort_ms": 0.28896331787109375,
+    "back_ocr_ms": 1264.3232345581055,
+    "back_rules_ms": 0.5154609680175781,
+    "fusion_ms": 0.11229515075683594,
+    "total_ms": 3053.2681941986084
+  }
+}

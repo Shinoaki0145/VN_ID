@@ -1,0 +1,263 @@
+{
+  "boxes": [
+    {
+      "bbox": [
+        280,
+        17,
+        776,
+        54
+      ],
+      "text": "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM",
+      "confidence": 0.9004753810517928,
+      "line_number": 1
+    },
+    {
+      "bbox": [
+        870,
+        31,
+        946,
+        55
+      ],
+      "text": "CED",
+      "confidence": 0.3851722280184428,
+      "line_number": 1
+    },
+    {
+      "bbox": [
+        389,
+        48,
+        665,
+        80
+      ],
+      "text": "Độc lập - Tự do - Hạnh phúc",
+      "confidence": 0.8901899810190554,
+      "line_number": 2
+    },
+    {
+      "bbox": [
+        355,
+        77,
+        701,
+        105
+      ],
+      "text": "SOCIALIST REPUBLIC OF VIET NAM",
+      "confidence": 0.8994478444258373,
+      "line_number": 3
+    },
+    {
+      "bbox": [
+        361,
+        99,
+        696,
+        126
+      ],
+      "text": "Independence Freedom -Happiness",
+      "confidence": 0.8454861886078312,
+      "line_number": 4
+    },
+    {
+      "bbox": [
+        283,
+        141,
+        781,
+        189
+      ],
+      "text": "CĂN CƯỚC CÔNG DÂN",
+      "confidence": 0.8743197567322675,
+      "line_number": 5
+    },
+    {
+      "bbox": [
+        285,
+        208,
+        508,
+        238
+      ],
+      "text": "Citizen Identity Card",
+      "confidence": 0.9045561154683431,
+      "line_number": 6
+    },
+    {
+      "bbox": [
+        285,
+        263,
+        733,
+        302
+      ],
+      "text": "054205010560",
+      "confidence": 0.8962565809488297,
+      "line_number": 7
+    },
+    {
+      "bbox": [
+        286,
+        311,
+        526,
+        341
+      ],
+      "text": "Họ và tên I Full name:",
+      "confidence": 0.8893627388910814,
+      "line_number": 8
+    },
+    {
+      "bbox": [
+        284,
+        341,
+        744,
+        393
+      ],
+      "text": "TRẦN HOÀI THIỆN NHÂN",
+      "confidence": 0.8984016746282577,
+      "line_number": 9
+    },
+    {
+      "bbox": [
+        288,
+        388,
+        478,
+        420
+      ],
+      "text": "Ngày sinh I Date",
+      "confidence": 0.8658916968852282,
+      "line_number": 10
+    },
+    {
+      "bbox": [
+        503,
+        388,
+        562,
+        415
+      ],
+      "text": "birth:",
+      "confidence": 0.8856094976266226,
+      "line_number": 10
+    },
+    {
+      "bbox": [
+        589,
+        395,
+        752,
+        424
+      ],
+      "text": "10/04/2005",
+      "confidence": 0.9048453092575073,
+      "line_number": 10
+    },
+    {
+      "bbox": [
+        289,
+        428,
+        963,
+        465
+      ],
+      "text": "Giới tính//Sex: Nam Quốc tịch / Nationality: Việt Nam",
+      "confidence": 0.8390124980008827,
+      "line_number": 11
+    },
+    {
+      "bbox": [
+        290,
+        477,
+        580,
+        509
+      ],
+      "text": "Quê quán I Place of origin:",
+      "confidence": 0.8894412120183309,
+      "line_number": 12
+    },
+    {
+      "bbox": [
+        286,
+        509,
+        900,
+        551
+      ],
+      "text": "Hòa Hiệp Bắc, Thị xã Đông Hòa, Phú Yên",
+      "confidence": 0.8848028465321189,
+      "line_number": 13
+    },
+    {
+      "bbox": [
+        291,
+        543,
+        470,
+        573
+      ],
+      "text": "Nơi thường trú",
+      "confidence": 0.8992534066949572,
+      "line_number": 14
+    },
+    {
+      "bbox": [
+        481,
+        541,
+        681,
+        572
+      ],
+      "text": "Place ofresidence",
+      "confidence": 0.8932739005369299,
+      "line_number": 14
+    },
+    {
+      "bbox": [
+        682,
+        551,
+        893,
+        589
+      ],
+      "text": "234 Tân Trào",
+      "confidence": 0.8884681314229965,
+      "line_number": 14
+    },
+    {
+      "bbox": [
+        287,
+        583,
+        888,
+        633
+      ],
+      "text": "Bình Kiến, Thành phố Tuy Hoà, Phú Yên",
+      "confidence": 0.8984722044016864,
+      "line_number": 15
+    },
+    {
+      "bbox": [
+        26,
+        568,
+        55,
+        587
+      ],
+      "text": "Có",
+      "confidence": 0.5371981561183929,
+      "line_number": 16
+    },
+    {
+      "bbox": [
+        26,
+        579,
+        281,
+        609
+      ],
+      "text": "Date of expiry 10/04/2030",
+      "confidence": 0.8367964923381805,
+      "line_number": 16
+    },
+    {
+      "bbox": [
+        85,
+        564,
+        154,
+        589
+      ],
+      "text": "trị đến:",
+      "confidence": 0.8380627296864986,
+      "line_number": 16
+    }
+  ],
+  "full_text": "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM CED\nĐộc lập - Tự do - Hạnh phúc\nSOCIALIST REPUBLIC OF VIET NAM\nIndependence Freedom -Happiness\nCĂN CƯỚC CÔNG DÂN\nCitizen Identity Card\n054205010560\nHọ và tên I Full name:\nTRẦN HOÀI THIỆN NHÂN\nNgày sinh I Date birth: 10/04/2005\nGiới tính//Sex: Nam Quốc tịch / Nationality: Việt Nam\nQuê quán I Place of origin:\nHòa Hiệp Bắc, Thị xã Đông Hòa, Phú Yên\nNơi thường trú Place ofresidence 234 Tân Trào\nBình Kiến, Thành phố Tuy Hoà, Phú Yên\nCó Date of expiry 10/04/2030 trị đến:",
+  "mrz_text": null,
+  "time_taken_ms": 7074.639320373535,
+  "det_time_ms": 3908.937454223633,
+  "rec_time_ms": 950.6895542144775,
+  "sort_time_ms": 0.15735626220703125
+}

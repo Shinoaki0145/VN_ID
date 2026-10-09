@@ -1,0 +1,8 @@
+{
+  "source": "image/front_cu_5.jpg",
+  "device": "cpu",
+  "qr_decode": false,
+  "qr_detection_and_masking": false,
+  "mrz_recognition": false,
+  "expiry_date": null
+}

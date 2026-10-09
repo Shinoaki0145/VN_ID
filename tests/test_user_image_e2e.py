@@ -1,8 +1,9 @@
 import os
 from pathlib import Path
+from types import SimpleNamespace
 import cv2
 import pytest
-from vn_id.parser import BackRuleExtractor as BackSideExtractor
+from vn_id.parser import BackRuleExtractor as BackSideExtractor, FrontRuleExtractor
 from vn_id.pipeline import CCCDPipeline
 from vn_id.validator.fusion import DataFusion
 from vn_id.core.schemas import CardSide
@@ -75,6 +76,38 @@ def test_cccd_2021_back_preserves_issuer(real_pipeline):
     assert result.card_version == "cccd_chip_2021"
     assert result.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
     assert result.expiry_date == "01/01/2033"
+
+
+def test_cccd_front_ocr_preserves_origin_comma(real_pipeline):
+    image = CCCDPipeline.load_image(real_image_path("front_cu_4.jpg"))
+    aligned = real_pipeline.aligner.align(image).aligned_image
+    ocr = real_pipeline.ocr_engine.recognize(aligned, is_front=True)
+    front = FrontRuleExtractor.extract(ocr.full_text)
+    assert front.origin == "Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai"
+    assert front.id == "075097023463"
+    assert front.dob == "29/03/1997"
+    result = DataFusion.fuse(front=front)
+    assert result.data.origin == front.origin
+
+
+def test_front_cu_original_reads_identity_and_expiry_without_qr(real_pipeline, monkeypatch):
+    monkeypatch.setattr(
+        real_pipeline.ocr_engine, "qr_decoder",
+        SimpleNamespace(mask_qr_regions=lambda image: image),
+    )
+    image = CCCDPipeline.load_image(real_image_path("front_cu.jpg"))
+    aligned = real_pipeline.aligner.align(image).aligned_image
+    ocr = real_pipeline.ocr_engine.recognize(aligned, is_front=True)
+    front = FrontRuleExtractor.extract(ocr.full_text)
+    assert front.id == "054205010560"
+    assert front.dob == "10/04/2005"
+    assert front.origin == "Hòa Hiệp Bắc, Thị xã Đông Hòa, Phú Yên"
+    assert front.residence.startswith("234 Tân Trào,")
+    assert front.expiry_date == "10/04/2030"
+    result = DataFusion.fuse(front=front)
+    assert result.data.id == "054205010560"
+    assert result.field_sources["id"] == "front_rules"
+    assert result.field_sources["expiry_date"] == "front_rules"
 
 
 @pytest.mark.parametrize("image_name,id_num,dob,issue_date,expiry_date", [

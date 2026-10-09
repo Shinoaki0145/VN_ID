@@ -1,0 +1,75 @@
+origin, residence khong nhan dien duoc
+expiry_date khong nhan dien duoc nhung dang lay mrz
+
+{
+  "success": true,
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "077200011327",
+    "cmnd_old": null,
+    "name": "DƯƠNG TOÀN THẮNG",
+    "dob": "30/04/2000",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": null,
+    "residence": null,
+    "issue_date": "25/10/2022",
+    "expiry_date": "30/08/2034",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "front_rules",
+    "name": "front_rules",
+    "dob": "front_rules",
+    "gender": "front_rules",
+    "nationality": "default",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "mrz"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": false
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": true
+    },
+    "warnings": [
+      "MRZ id: 062194002092 differs from front_rules value 077200011327.",
+      "MRZ dob: 30/08/1994 differs from front_rules value 30/04/2000.",
+      "MRZ gender: Nữ differs from front_rules value Nam."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 3.39508056640625,
+    "qr_ms": 2615.9040927886963,
+    "front_ocr_det_ms": 486.4635467529297,
+    "front_ocr_rec_ms": 541.1856174468994,
+    "front_ocr_sort_ms": 0.3390312194824219,
+    "front_ocr_ms": 1028.0237197875977,
+    "front_rules_ms": 2.023458480834961,
+    "back_align_ms": 14.510154724121094,
+    "back_ocr_det_ms": 458.93144607543945,
+    "back_ocr_rec_ms": 904.7045707702637,
+    "back_ocr_sort_ms": 0.34618377685546875,
+    "back_ocr_ms": 1364.1283512115479,
+    "back_rules_ms": 0.4684925079345703,
+    "fusion_ms": 0.06628036499023438,
+    "total_ms": 5055.314064025879
+  }
+}

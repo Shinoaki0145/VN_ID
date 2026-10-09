@@ -1,0 +1,12 @@
+{
+  "source": "image/front_cu.jpg",
+  "original_shape": [
+    1650,
+    2524,
+    3
+  ],
+  "device": "cpu",
+  "qr_decode": false,
+  "qr_detection_and_masking": false,
+  "mrz_recognition": false
+}

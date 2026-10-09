@@ -1,0 +1,76 @@
+origin va residence sai
+
+{
+  "success": true,
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "079209052766",
+    "cmnd_old": null,
+    "name": "BÙI ĐÌNH KHÔI NGUYÊN",
+    "dob": "28/05/2009",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "Bình Hưng Hòa Bình Tân, TP. Hồ Chí Minh",
+    "residence": "Hoà Bình",
+    "issue_date": "13/08/2021",
+    "expiry_date": "16/06/2034",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "front_rules",
+    "name": "front_rules",
+    "dob": "front_rules",
+    "gender": "front_rules",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "front_rules",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "mrz"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": false
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": null
+    },
+    "warnings": [
+      "MRZ id: 034194015561 differs from front_rules value 079209052766.",
+      "MRZ dob: 16/06/1994 differs from front_rules value 28/05/2009.",
+      "MRZ gender: Nữ differs from front_rules value Nam."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 18.31221580505371,
+    "qr_ms": 1231.0338020324707,
+    "front_ocr_det_ms": 592.0922756195068,
+    "front_ocr_rec_ms": 868.8938617706299,
+    "front_ocr_sort_ms": 0.5590915679931641,
+    "front_ocr_ms": 1461.5843296051025,
+    "front_rules_ms": 1.9824504852294922,
+    "back_align_ms": 5.198001861572266,
+    "back_ocr_det_ms": 420.2766418457031,
+    "back_ocr_rec_ms": 799.426794052124,
+    "back_ocr_sort_ms": 0.3781318664550781,
+    "back_ocr_ms": 1220.1623916625977,
+    "back_rules_ms": 0.4673004150390625,
+    "fusion_ms": 0.1342296600341797,
+    "total_ms": 3946.2430477142334
+  }
+}

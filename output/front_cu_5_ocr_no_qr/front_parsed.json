@@ -1,0 +1,16 @@
+{
+  "id": "079209052766",
+  "name": "BÙI ĐÌNH KHÔI NGUYÊN",
+  "dob": "28/05/2009",
+  "gender": "Nam",
+  "nationality": "Việt Nam",
+  "origin": "Bình Hưng Hòa Bình Tân, TP. Hồ Chí Minh",
+  "residence": "Hoà Bình",
+  "expiry_date": null,
+  "extraction_source": "front_rules",
+  "confidence_scores": {
+    "id": 0.99,
+    "name": 0.85,
+    "dob": 0.95
+  }
+}

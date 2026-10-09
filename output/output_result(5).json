@@ -1,0 +1,73 @@
+{
+  "success": true,
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "024204000474",
+    "cmnd_old": null,
+    "name": "Bùi Huy Tuyển",
+    "dob": "24/01/2004",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "Đông Phú, Lục Nam, Bắc Giang",
+    "residence": "Thôn Trong, Đông Phú, Lục Nam, Bắc Giang",
+    "issue_date": "16/04/2021",
+    "expiry_date": "22/01/2028",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "qr",
+    "name": "qr",
+    "dob": "qr",
+    "gender": "qr",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "qr",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "mrz"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": true
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": true
+    },
+    "warnings": [
+      "MRZ id: 040203004871 differs from qr value 024204000474.",
+      "MRZ dob: 22/01/2003 differs from qr value 24/01/2004."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 14.665842056274414,
+    "qr_ms": 98.14000129699707,
+    "front_ocr_det_ms": 488.2547855377197,
+    "front_ocr_rec_ms": 710.6609344482422,
+    "front_ocr_sort_ms": 0.41365623474121094,
+    "front_ocr_ms": 1199.3584632873535,
+    "front_rules_ms": 0.4246234893798828,
+    "back_align_ms": 13.438701629638672,
+    "back_ocr_det_ms": 459.8815441131592,
+    "back_ocr_rec_ms": 1091.2389755249023,
+    "back_ocr_sort_ms": 0.44918060302734375,
+    "back_ocr_ms": 1551.6993999481201,
+    "back_rules_ms": 0.7333755493164062,
+    "fusion_ms": 0.16546249389648438,
+    "total_ms": 2889.369487762451
+  }
+}

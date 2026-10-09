@@ -87,6 +87,25 @@ class OCREngine:
             )
         return self._mrz_reader
 
+    def _recognize_id_region(self, crop: np.ndarray, detector, recognizer) -> tuple[str, float] | None:
+        """Separate a smaller ID label from larger digits and read the actual digit crop."""
+        horizontal, _ = detector.detect(crop, height_ths=0.2, width_ths=0.5, canvas_size=128)
+        candidates = []
+        for xmin, xmax, ymin, ymax in (horizontal[0] if horizontal else []):
+            digits = crop[
+                max(0, int(ymin) - 2):min(crop.shape[0], int(ymax) + 2),
+                max(0, int(xmin) - 2):min(crop.shape[1], int(xmax) + 2),
+            ]
+            if digits.size == 0:
+                continue
+            text, prob = recognizer.predict(
+                Image.fromarray(cv2.cvtColor(digits, cv2.COLOR_BGR2RGB)), return_prob=True,
+            )
+            text = text.strip()
+            if len(text) == 12 and text.isascii() and text.isdigit() and prob >= 0.35:
+                candidates.append((text, float(prob)))
+        return candidates[0] if len(candidates) == 1 else None
+
     def _recognize_mrz(self, image: np.ndarray) -> str:
         """Read complete MRZ lines instead of Vietnamese fragments/filler guesses."""
         roi = image[int(image.shape[0] * 0.6):]
@@ -133,7 +152,10 @@ class OCREngine:
             # address digits, while other layouts retain their original boxes.
             has_back_qr = not is_front and not np.array_equal(image, masked_image)
             image = masked_image
-            h_list, f_list = detector.detect(image, width_ths=2.0 if has_back_qr else 0.5, canvas_size=1600)
+            # Read front address fragments together so intervening commas stay
+            # inside the VietOCR crop instead of being lost between boxes.
+            width_ths = 0.75 if is_front else (2.0 if has_back_qr else 0.5)
+            h_list, f_list = detector.detect(image, width_ths=width_ths, canvas_size=1600)
             det_time_ms = (time.time() - t_det_start) * 1000.0
 
             boxes: list[TextBox] = []
@@ -150,7 +172,9 @@ class OCREngine:
                     if box_w < 8 or box_h < 6:
                         continue
 
-                    pad_y = 4
+                    # Small expiry text under the portrait sits close to the
+                    # next line; wider padding can corrupt its label.
+                    pad_y = 2 if is_front and xmax <= 0.35 * w and ymin >= 0.45 * h else 4
                     pad_x = 2
                     y1, y2 = max(0, ymin - pad_y), min(h, ymax + pad_y)
                     x1, x2 = max(0, xmin - pad_x), min(w, xmax + pad_x)
@@ -162,6 +186,13 @@ class OCREngine:
                     try:
                         text, prob = recognizer.predict(pil_crop, return_prob=True)
                         clean_text = unicodedata.normalize("NFC", text.strip())
+                        if is_front and clean_text.casefold().startswith(("số", "so ", "no.")) and not re.search(r"\b\d{12}\b", clean_text):
+                            try:
+                                candidate = self._recognize_id_region(crop, detector, recognizer)
+                                if candidate:
+                                    clean_text, prob = candidate
+                            except Exception as error:
+                                logger.warning("ID region recognition unavailable; keeping ordinary OCR: %s", str(error))
                         if clean_text and prob >= 0.35:
                             boxes.append(
                                 TextBox(

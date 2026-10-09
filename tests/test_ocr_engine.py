@@ -80,6 +80,31 @@ def test_optional_mrz_failure_preserves_ordinary_back_ocr(caplog):
     assert "Optional Latin model unavailable" in caplog.text
 
 
+@pytest.mark.parametrize("failure", ["detector_error", "ambiguous", "no_id"])
+def test_id_region_refinement_preserves_ordinary_ocr_when_unreliable(failure):
+    engine = OCREngine()
+    engine.qr_decoder._qreader = SimpleNamespace(detect=lambda **kwargs: ())
+    original = "Số 10044205010560"
+    predictions = iter([
+        original,
+        "054205010560" if failure == "ambiguous" else "Số",
+        "075097023463" if failure == "ambiguous" else "No.",
+    ])
+
+    def detect(image, **kwargs):
+        if kwargs.get("canvas_size") == 128:
+            if failure == "detector_error":
+                raise RuntimeError("ID detector unavailable")
+            return [[[10, 100, 5, 30], [110, 200, 5, 30]]], [[]]
+        return [[[10, 290, 10, 45]]], [[]]
+
+    engine._detector = SimpleNamespace(detect=detect)
+    engine._recognizer = SimpleNamespace(predict=lambda *args, **kwargs: (next(predictions), 0.9))
+    result = engine.recognize(np.zeros((100, 300, 3), dtype=np.uint8))
+    assert result.full_text == original
+    assert len(result.boxes) == 1
+
+
 def test_mrz_reader_downloads_missing_model_into_its_storage(tmp_path, monkeypatch):
     import shutil
 

@@ -1,0 +1,16 @@
+{
+  "id": "054205010560",
+  "name": "TRẦN HOÀI THIỆN NHÂN",
+  "dob": "10/04/2005",
+  "gender": "Nam",
+  "nationality": "Việt Nam",
+  "origin": "Hòa Hiệp Bắc, Thị xã Đông Hòa, Phú Yên",
+  "residence": "234 Tân Trào, Bình Kiến, Thành phố Tuy Hoà, Phú Yên",
+  "expiry_date": null,
+  "extraction_source": "front_rules",
+  "confidence_scores": {
+    "id": 0.99,
+    "name": 0.85,
+    "dob": 0.95
+  }
+}
