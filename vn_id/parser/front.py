@@ -1,4 +1,5 @@
 """Front-side rule-based extractor for Vietnamese CCCD / ID cards."""
+from datetime import date
 import re
 from vn_id.core.utils import remove_accents, normalize_date
 from vn_id.core.constants import PROVINCE_CODES
@@ -150,6 +151,26 @@ class FrontRuleExtractor:
             results["expiry_date"] = normalize_date(d, m, y)
         elif "KHONG THOI HAN" in clean_text or "VO THOI HAN" in clean_text:
             results["expiry_date"] = "Không thời hạn"
+
+        if "expiry_date" not in results:
+            after_residence = False
+            for line in lines:
+                clean_line = remove_accents(line).upper()
+                if "NOI THUONG TRU" in clean_line or "NOI CU TRU" in clean_line:
+                    after_residence = True
+                    continue
+                if not after_residence or not ("DATE" in clean_line or "CO GIA" in clean_line):
+                    continue
+                for match in re.finditer(r"(?<![\d/])(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?!\d)", line):
+                    d, m, y = match.groups()
+                    try:
+                        date(int(y), int(m), int(d))
+                    except ValueError:
+                        continue
+                    results["expiry_date"] = normalize_date(d, m, y)
+                    break
+                if "expiry_date" in results:
+                    break
 
         # 6. A province without a residence label cannot identify a residence.
         if "origin" not in results:

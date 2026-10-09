@@ -1,4 +1,5 @@
 """OCR Engine with DBNet detector and VietOCR recognizer."""
+from datetime import date
 import os
 import logging
 import re
@@ -288,6 +289,39 @@ class OCREngine:
                             rejected_address_boxes.append((xmin, xmax, ymin, ymax))
                     except Exception as error:
                         logger.warning("Text recognition unavailable: %s", str(error))
+
+            if is_front:
+                visible_text = remove_accents(" ".join(box.text for box in boxes)).upper()
+                expiry_boxes = [
+                    box for box in boxes
+                    if box.bbox[2] <= 0.35 * w and box.bbox[1] >= 0.82 * h
+                ]
+                has_expiry_label = any(
+                    "DATE" in remove_accents(box.text).upper()
+                    or "CO GIA" in remove_accents(box.text).upper()
+                    for box in expiry_boxes
+                )
+                has_clear_date = any(
+                    box.confidence >= 0.8
+                    and re.search(r"(?<!\d)\d{1,2}[/.-]\d{1,2}[/.-]\d{4}(?!\d)", box.text)
+                    for box in expiry_boxes
+                )
+                if "CAN CUOC CONG DAN" in visible_text and has_expiry_label and not has_clear_date:
+                    try:
+                        x1, x2 = round(0.125 * w), round(0.295 * w)
+                        y1, y2 = round(0.876 * h), round(0.956 * h)
+                        crop = image[y1:y2, x1:x2]
+                        value, prob = recognizer.predict(
+                            Image.fromarray(cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)), return_prob=True,
+                        )
+                        value = value.strip()
+                        match = re.fullmatch(r"(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})", value)
+                        if match and prob >= 0.8:
+                            day, month, year = map(int, match.groups())
+                            date(year, month, day)
+                            boxes.append(TextBox(bbox=[x1, y1, x2, y2], text=value, confidence=float(prob)))
+                    except Exception as error:
+                        logger.warning("Front expiry reread unavailable; keeping ordinary OCR: %s", error)
 
             if is_front and rejected_address_boxes:
                 text_so_far = remove_accents(" ".join(box.text for box in boxes)).upper()

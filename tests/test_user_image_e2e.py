@@ -66,24 +66,26 @@ def test_front_cu_5_ocr_reads_both_addresses(ocr_only_engine):
 
     assert front.origin == "Bình Hưng Hòa A, Bình Tân, TP. Hồ Chí Minh"
     assert front.residence == "24/12/29 LK 2-10, Kp 18, Bình Hưng Hòa A, Bình Tân, TP.HCM"
+    assert front.expiry_date == "28/05/2034"
     assert front.extraction_source == "front_rules"
 
 
-@pytest.mark.parametrize("name,origin,residence", [
+@pytest.mark.parametrize("name,origin,residence,expiry", [
     ("front_cu.jpg", "Hòa Hiệp Bắc, Thị xã Đông Hòa, Phú Yên",
-     "234 Tân Trào, Bình Kiến, Thành phố Tuy Hoà, Phú Yên"),
+     "234 Tân Trào, Bình Kiến, Thành phố Tuy Hoà, Phú Yên", "10/04/2030"),
     ("front_cu_4.jpg", "Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai",
-     "Kp Phước Hiệp, Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai"),
+     "Kp Phước Hiệp, Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai", "29/03/2037"),
     ("front_cu_6.jpg", "Đông Phú, Lục Nam, Bắc Giang",
-     "Thôn Trong, Đông Phú, Lục Nam, Bắc Giang"),
+     "Thôn Trong, Đông Phú, Lục Nam, Bắc Giang", "24/01/2029"),
 ])
-def test_front_address_recovery_preserves_clean_cards(ocr_only_engine, name, origin, residence):
+def test_front_address_recovery_preserves_clean_cards(ocr_only_engine, name, origin, residence, expiry):
     image = CCCDPipeline.load_image(real_image_path(name))
     aligned = CardAligner().align(image).aligned_image
     front = FrontRuleExtractor.extract(ocr_only_engine.recognize(aligned, is_front=True).full_text)
     assert front.origin == origin
     if residence is not None:
         assert front.residence == residence
+    assert front.expiry_date == expiry
 
 
 def test_front_cu_7_recovers_residence_from_ocr_only(ocr_only_engine):
@@ -93,6 +95,19 @@ def test_front_cu_7_recovers_residence_from_ocr_only(ocr_only_engine):
 
     assert front.origin == "Minh Tâm, Nguyên Bình, Cao Bằng"
     assert front.residence == "Tổ 11, Sông Bằng, Thành phố Cao Bằng, Cao Bằng"
+    assert front.expiry_date == "13/12/2023"
+
+
+@pytest.mark.parametrize("name,expiry", [
+    ("front_cu_5.jpg", "28/05/2034"),
+    ("front_cu_6.jpg", "24/01/2029"),
+])
+def test_old_front_expiry_is_read_from_ocr_only(ocr_only_engine, name, expiry):
+    image = CCCDPipeline.load_image(real_image_path(name))
+    aligned = CardAligner().align(image).aligned_image
+    front = FrontRuleExtractor.extract(ocr_only_engine.recognize(aligned, is_front=True).full_text)
+
+    assert front.expiry_date == expiry
 
 
 def test_can_cuoc_2024_origin_keeps_ward_and_district_numbers(real_pipeline):

@@ -42,3 +42,22 @@ def test_residence_normalizes_unambiguous_province_accent_in_final_component():
     assert FrontRuleExtractor.extract_raw(text).get("residence") == (
         "Tổ 11, Sông Bằng, Thành phố Cao Bằng, Cao Bằng"
     )
+
+
+@pytest.mark.parametrize("expiry_line,expected", [
+    ("Date prepoy 28/05/2034", "28/05/2034"),
+    ("Có giá trịch Date of expiry 201/21/01/2029 24/01/2029", "24/01/2029"),
+])
+def test_front_expiry_uses_valid_date_after_residence_label(expiry_line, expected):
+    text = f"Ngày sinh / Date of birth: 24/01/2004\nNơi thường trú: Bắc Giang\n{expiry_line}"
+    assert FrontRuleExtractor.extract_raw(text).get("expiry_date") == expected
+
+
+def test_front_expiry_does_not_reuse_birth_date_without_residence_anchor():
+    text = "CĂN CƯỚC CÔNG DÂN\nNgày sinh / Date of birth: 24/01/2004"
+    assert FrontRuleExtractor.extract_raw(text).get("expiry_date") is None
+
+
+def test_front_expiry_does_not_use_unlabelled_or_malformed_date_after_residence():
+    text = "Nơi thường trú: Bắc Giang\nHẻm 24/01/2029\nDate of expiry 201/21/01/2029"
+    assert FrontRuleExtractor.extract_raw(text).get("expiry_date") is None
