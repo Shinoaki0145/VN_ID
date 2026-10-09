@@ -8,6 +8,8 @@ from vn_id.pipeline import CCCDPipeline
 from vn_id.validator.fusion import DataFusion
 from vn_id.core.schemas import CardSide
 from vn_id.core.config import EASYOCR_STORAGE_DIR, QR_WEIGHTS_DIR, VIETOCR_WEIGHTS_PATH
+from vn_id.ocr import OCREngine
+from vn_id.aligner.detector import CardAligner
 
 USER_FIXTURE_PATH = "tests/fixtures/user_sample_back.png"
 
@@ -38,6 +40,59 @@ def real_image_path(name):
     if not path.is_file():
         pytest.skip(f"Real image fixture missing: {name}")
     return str(path)
+
+
+@pytest.fixture
+def ocr_only_engine():
+    torch = pytest.importorskip("torch")
+    pytest.importorskip("easyocr")
+    pytest.importorskip("vietocr")
+    for weight in (EASYOCR_STORAGE_DIR / "pretrained_ic15_res18.pt", VIETOCR_WEIGHTS_PATH):
+        if not weight.is_file():
+            pytest.skip(f"Real OCR weights missing: {weight.name}")
+    original_threads = torch.get_num_threads()
+    torch.set_num_threads(min(original_threads, 4))
+    try:
+        yield OCREngine(device="cpu", qr_decoder=SimpleNamespace(mask_qr_regions=lambda image: image))
+    finally:
+        torch.set_num_threads(original_threads)
+
+
+def test_front_cu_5_ocr_reads_both_addresses(ocr_only_engine):
+    image = CCCDPipeline.load_image(real_image_path("front_cu_5.jpg"))
+    aligned = CardAligner().align(image).aligned_image
+    ocr = ocr_only_engine.recognize(aligned, is_front=True)
+    front = FrontRuleExtractor.extract(ocr.full_text)
+
+    assert front.origin == "Bình Hưng Hòa A, Bình Tân, TP. Hồ Chí Minh"
+    assert front.residence == "24/12/29 LK 2-10, Kp 18, Bình Hưng Hòa A, Bình Tân, TP.HCM"
+    assert front.extraction_source == "front_rules"
+
+
+@pytest.mark.parametrize("name,origin,residence", [
+    ("front_cu.jpg", "Hòa Hiệp Bắc, Thị xã Đông Hòa, Phú Yên",
+     "234 Tân Trào, Bình Kiến, Thành phố Tuy Hoà, Phú Yên"),
+    ("front_cu_4.jpg", "Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai",
+     "Kp Phước Hiệp, Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai"),
+    ("front_cu_6.jpg", "Đông Phú, Lục Nam, Bắc Giang",
+     "Thôn Trong, Đông Phú, Lục Nam, Bắc Giang"),
+])
+def test_front_address_recovery_preserves_clean_cards(ocr_only_engine, name, origin, residence):
+    image = CCCDPipeline.load_image(real_image_path(name))
+    aligned = CardAligner().align(image).aligned_image
+    front = FrontRuleExtractor.extract(ocr_only_engine.recognize(aligned, is_front=True).full_text)
+    assert front.origin == origin
+    if residence is not None:
+        assert front.residence == residence
+
+
+def test_front_cu_7_recovers_residence_from_ocr_only(ocr_only_engine):
+    image = CCCDPipeline.load_image(real_image_path("front_cu_7.jpg"))
+    aligned = CardAligner().align(image).aligned_image
+    front = FrontRuleExtractor.extract(ocr_only_engine.recognize(aligned, is_front=True).full_text)
+
+    assert front.origin == "Minh Tâm, Nguyên Bình, Cao Bằng"
+    assert front.residence == "Tổ 11, Sông Bằng, Thành phố Cao Bằng, Cao Bằng"
 
 
 def test_can_cuoc_2024_origin_keeps_ward_and_district_numbers(real_pipeline):

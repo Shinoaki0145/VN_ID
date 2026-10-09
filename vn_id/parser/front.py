@@ -151,8 +151,8 @@ class FrontRuleExtractor:
         elif "KHONG THOI HAN" in clean_text or "VO THOI HAN" in clean_text:
             results["expiry_date"] = "Không thời hạn"
 
-        # 6. Fallback province detection if residence or origin still missing
-        if "residence" not in results or "origin" not in results:
+        # 6. A province without a residence label cannot identify a residence.
+        if "origin" not in results:
             found_locs: list[str] = []
             for line in lines:
                 clean_l = remove_accents(line).upper()
@@ -164,17 +164,19 @@ class FrontRuleExtractor:
                         break
 
             if found_locs:
-                if "origin" not in results and "residence" not in results:
-                    if len(found_locs) >= 2:
-                        results["origin"] = found_locs[0]
-                        results["residence"] = found_locs[1]
-                    else:
-                        results["origin"] = found_locs[0]
-                        results["residence"] = found_locs[0]
-                elif "origin" not in results:
-                    results["origin"] = found_locs[0]
-                elif "residence" not in results:
-                    results["residence"] = found_locs[-1]
+                results["origin"] = found_locs[0]
+
+        for field in ("origin", "residence"):
+            address = results.get(field, "")
+            if "," not in address:
+                continue
+            prefix, _, province = address.rpartition(",")
+            matches = [
+                name for name in PROVINCE_CODES.values()
+                if remove_accents(name).casefold() == remove_accents(province.strip()).casefold()
+            ]
+            if len(matches) == 1:
+                results[field] = f"{prefix}, {matches[0]}"
 
         return results
 
@@ -210,4 +212,3 @@ class FrontRuleExtractor:
                 "dob": 0.95 if dob else 0.0,
             },
         )
-

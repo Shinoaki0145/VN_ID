@@ -7,6 +7,7 @@ from vn_id.ocr import OCREngine
 from vn_id.pipeline import CCCDPipeline
 from vn_id.qr import QRDecoder
 from vn_id.core.config import EASYOCR_STORAGE_DIR
+from vn_id.core.schemas import TextBox
 
 
 def test_ocr_masks_qr_before_detection_and_recognition():
@@ -217,3 +218,139 @@ def test_ocr_keeps_distinct_fields(is_front, second_x, has_qr):
     assert sorted(box.bbox for box in result.boxes) == [
         [10, 10, 90, 30], [second_x, 10, second_x + 80, 30],
     ]
+
+
+def test_failed_address_retry_keeps_primary_ocr():
+    engine = OCREngine(qr_decoder=SimpleNamespace(mask_qr_regions=lambda image: image))
+    calls = []
+
+    def detect(image, **kwargs):
+        calls.append(kwargs["width_ths"])
+        if kwargs["width_ths"] == 0.3:
+            raise RuntimeError("retry detector unavailable")
+        return [[[273, 560, 487, 515], [279, 963, 509, 550], [95, 935, 543, 598]]], [[]]
+
+    predictions = iter([("Quê quán", 0.9), ("Bình Tân", 0.9), ("noise", 0.2)])
+    engine._detector = SimpleNamespace(detect=detect)
+    engine._recognizer = SimpleNamespace(predict=lambda *args, **kwargs: next(predictions))
+
+    result = engine.recognize(np.zeros((630, 1000, 3), dtype=np.uint8), is_front=True)
+
+    assert calls == [0.75, 0.3]
+    assert "Quê quán" in result.full_text
+    assert "Bình Tân" in result.full_text
+
+
+def test_local_vietocr_checkpoint_does_not_download_backbone(tmp_path, monkeypatch):
+    from vietocr.tool.config import Cfg
+    from vietocr.tool import predictor
+
+    checkpoint = tmp_path / "vgg_seq2seq.pth"
+    checkpoint.touch()
+    monkeypatch.setattr("vn_id.ocr.engine.VIETOCR_WEIGHTS_PATH", checkpoint)
+    monkeypatch.setattr(Cfg, "load_config_from_file", lambda path: {"cnn": {}})
+    seen = {}
+    monkeypatch.setattr(predictor, "Predictor", lambda config: seen.update(config))
+
+    OCREngine()._get_recognizer()
+
+    assert seen["cnn"].get("pretrained") is False
+
+
+def test_address_retry_recovers_separate_residence_boxes():
+    engine = OCREngine(qr_decoder=SimpleNamespace(mask_qr_regions=lambda image: image))
+    calls = []
+
+    def detect(image, **kwargs):
+        calls.append(kwargs["width_ths"])
+        if kwargs["width_ths"] == 0.3:
+            return [[[273, 451, 546, 577], [458, 934, 544, 589]]], [[]]
+        return [[[273, 560, 487, 515], [279, 963, 509, 550], [95, 935, 543, 598]]], [[]]
+
+    predictions = iter([
+        ("Quê quán", 0.9), ("Bình Tân", 0.9), ("noise", 0.2),
+        ("Nơi thường trú", 0.9), ("Place of residence: 24/12/29 LK 2-10", 0.9),
+    ])
+    engine._detector = SimpleNamespace(detect=detect)
+    engine._recognizer = SimpleNamespace(predict=lambda *args, **kwargs: next(predictions))
+
+    result = engine.recognize(np.zeros((630, 1000, 3), dtype=np.uint8), is_front=True)
+
+    assert calls == [0.75, 0.3]
+    assert "Nơi thường trú Place of residence: 24/12/29 LK 2-10" in result.full_text
+    assert result.full_text.count("Bình Tân") == 1
+
+
+def test_address_gap_recovery_keeps_spelling_from_original_box():
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[273, 487, 560, 515], text="Quê quán"),
+        TextBox(bbox=[279, 509, 512, 548], text="Bình Hưng Hòa"),
+        TextBox(bbox=[549, 507, 963, 550], text="Bình Tân"),
+    ]
+    predictions = iter([
+        ("Bình Hưng Hòa A, Bình Tần", 0.9),
+        ("Bình Hưng Hòa A, Bình Tần", 0.9),
+        ("Bình Hưng Hòa A,", 0.9),
+    ])
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: next(predictions))
+
+    engine._recover_front_address_lines(np.zeros((630, 1000, 3), dtype=np.uint8), boxes, recognizer)
+
+    assert "Bình Hưng Hòa A, Bình Tân" == " ".join(box.text for box in boxes[1:])
+
+
+def test_address_reread_cannot_change_existing_number_separators():
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[273, 546, 451, 577], text="Nơi thường trú"),
+        TextBox(bbox=[274, 574, 615, 622], text="24/12/29 LK 2-10"),
+        TextBox(bbox=[649, 577, 963, 627], text="Bình Tân, TP.HCM"),
+    ]
+    candidate = "24-12-29 LK 2/10, Bình Tân, TP.HCM"
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: (candidate, 0.9))
+
+    engine._recover_front_address_lines(np.zeros((630, 1000, 3), dtype=np.uint8), boxes, recognizer)
+
+    assert [box.text for box in boxes] == [
+        "Nơi thường trú", "24/12/29 LK 2-10", "Bình Tân, TP.HCM",
+    ]
+
+
+def test_residence_number_reread_recovers_word_before_detected_digits():
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[282, 538, 477, 571], text="Nơi thường trú I"),
+        TextBox(bbox=[474, 536, 683, 579], text="Place ofresidence:"),
+        TextBox(bbox=[735, 559, 756, 575], text="11"),
+        TextBox(bbox=[280, 575, 945, 632], text="Sông Bằng, Thành phố Cao Bằng, Cảo Bằng"),
+    ]
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: ("Tổ 11", 0.89))
+
+    engine._recover_front_address_lines(np.zeros((630, 1000, 3), dtype=np.uint8), boxes, recognizer)
+
+    assert boxes[2].text == "Tổ 11"
+
+
+@pytest.mark.parametrize("original,rereads,expected", [
+    ("Minh Tâm, Nguyễn Bình, Cao Bằng", ["Minh Tâm, Nguyên Bình, Cao Bằng"] * 2,
+     "Minh Tâm, Nguyên Bình, Cao Bằng"),
+    ("Minh Tâm, Nguyễn Bình, Cao Bằng",
+     ["Minh Tâm, Nguyên Bình, Cao Bằng", "Minh Tâm, Nguyễn Bình, Cao Bằng"],
+     "Minh Tâm, Nguyễn Bình, Cao Bằng"),
+    ("Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai",
+     ["Thị trấn Hiệp Phước, Nhơn Trạch, Đang Nai"] * 2,
+     "Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai"),
+])
+def test_origin_tight_crop_only_accepts_repeatable_accent_change(original, rereads, expected):
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[284, 474, 579, 507], text="Quê quán I Place of origin:"),
+        TextBox(bbox=[283, 501, 813, 551], text=original, confidence=0.88),
+    ]
+    predictions = iter((value, 0.88) for value in rereads)
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: next(predictions))
+
+    engine._recover_front_address_lines(np.zeros((630, 1000, 3), dtype=np.uint8), boxes, recognizer)
+
+    assert boxes[1].text == expected

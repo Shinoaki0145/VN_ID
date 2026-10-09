@@ -74,7 +74,7 @@ HEADER_EXCLUSIONS_ADDR = [
 def clean_address_value(val: str) -> str:
     """Cleans up leading English labels or noisy symbols from address values."""
     val = re.sub(
-        r"^(?:[Jj]?\s*PLACE\s*O[TF]?\s*RESIDENC[EO]?|RESIDENC[EO]?)\s*[:\-\/;]*\s*",
+        r"^(?:[IJj]?\s*PLACE\s*(?:O[TF]?\s*)?RESIDENC[EO]?|RESIDENC[EO]?)\s*[:\-\/;]*\s*",
         "",
         val,
         flags=re.IGNORECASE,
