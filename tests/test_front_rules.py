@@ -28,6 +28,8 @@ def test_missing_residence_does_not_guess_hoa_binh_from_origin():
      "Thôn Trong, Đông Phú, Lục Nam, Bắc Giang"),
     ("I Place ofresidence:", "Tổ 11", "Sông Bằng, Thành phố Cao Bằng, Cao Bằng",
      "Tổ 11, Sông Bằng, Thành phố Cao Bằng, Cao Bằng"),
+    ("I Place Tresidence", "Bắc Phượng Sơn", "Xuân Thành, Yên Thành, Nghệ An",
+     "Bắc Phượng Sơn, Xuân Thành, Yên Thành, Nghệ An"),
 ])
 def test_residence_keeps_value_after_noisy_english_label(label, first_line, second_line, expected):
     text = f"Nơi thường trú {label} {first_line}\n{second_line}\nCó giá trị đến: 01/01/2030"

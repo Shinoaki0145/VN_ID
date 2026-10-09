@@ -98,6 +98,20 @@ def test_front_cu_7_recovers_residence_from_ocr_only(ocr_only_engine):
     assert front.expiry_date == "13/12/2023"
 
 
+def test_front_cu_1_crop_reads_both_addresses_from_ocr_only(ocr_only_engine):
+    image = CCCDPipeline.load_image(real_image_path("front_cu_1_crop.jpg"))
+    aligned = CardAligner().align(image).aligned_image
+    front = FrontRuleExtractor.extract(ocr_only_engine.recognize(aligned, is_front=True).full_text)
+
+    assert front.id == "040098020586"
+    assert front.name == "LÊ VĂN HOÀNG"
+    assert front.dob == "19/03/1998"
+    assert front.origin == "Xuân Thành, Yên Thành, Nghệ An"
+    assert front.residence == "Bắc Phượng Sơn, Xuân Thành, Yên Thành, Nghệ An"
+    assert front.expiry_date == "19/03/2038"
+    assert front.extraction_source == "front_rules"
+
+
 @pytest.mark.parametrize("name,expiry", [
     ("front_cu_5.jpg", "28/05/2034"),
     ("front_cu_6.jpg", "24/01/2029"),

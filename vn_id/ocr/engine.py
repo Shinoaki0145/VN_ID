@@ -150,6 +150,18 @@ class OCREngine:
                     ) and remove_accents(candidate) == remove_accents(box.text)):
                         box.text = candidate
                         box.confidence = min(prob for _, prob in rereads)
+                    if x2 < 0.8 * w:
+                        height = y2 - y1
+                        expanded = [read(x1, y1, min(w, x2 + round(height * factor)), y2)
+                                    for factor in (1.0, 1.3)]
+                        candidate = expanded[0][0]
+                        suffix = candidate[len(box.text):]
+                        if (candidate.startswith(box.text + " ") and len(suffix.split()) <= 2
+                                and all(value == candidate and prob >= max(0.85, box.confidence - 0.02)
+                                        for value, prob in expanded)):
+                            box.text = candidate
+                            box.confidence = min(prob for _, prob in expanded)
+                            box.bbox[2] = min(w, x2 + height)
                 continue
             if len(line) < 2:
                 continue

@@ -354,3 +354,24 @@ def test_origin_tight_crop_only_accepts_repeatable_accent_change(original, rerea
     engine._recover_front_address_lines(np.zeros((630, 1000, 3), dtype=np.uint8), boxes, recognizer)
 
     assert boxes[1].text == expected
+
+
+@pytest.mark.parametrize("expanded,expected", [
+    ("Xuân Thành, Yên Thành, Nghệ An", "Xuân Thành, Yên Thành, Nghệ An"),
+    ("Xuân Thành, Yên Thành, Nghe An", "Xuân Thành, Yên Thành, Nghệ"),
+])
+def test_origin_crop_can_append_only_without_changing_recognized_text(expanded, expected):
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[309, 476, 476, 507], text="Quê quán"),
+        TextBox(bbox=[303, 504, 762, 549], text="Xuân Thành, Yên Thành, Nghệ", confidence=0.90),
+    ]
+    predictions = iter([
+        (boxes[1].text, 0.90), (boxes[1].text, 0.90),
+        (expanded, 0.89), (expanded, 0.90),
+    ])
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: next(predictions))
+
+    engine._recover_front_address_lines(np.zeros((630, 1000, 3), dtype=np.uint8), boxes, recognizer)
+
+    assert boxes[1].text == expected
