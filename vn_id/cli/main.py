@@ -19,11 +19,10 @@ def cli():
 @click.option("--front", type=click.Path(exists=True), help="Đường dẫn ảnh mặt trước")
 @click.option("--back", type=click.Path(exists=True), help="Đường dẫn ảnh mặt sau")
 @click.option("--output", "-o", type=click.Path(), help="Đường dẫn file JSON xuất kết quả")
-@click.option("--mock", is_flag=True, default=False, help="Chạy ở chế độ Mock giả lập để test nhanh")
 @click.option("--device", default="auto", help="Thiết bị xử lý: 'auto', 'cpu', 'cuda'")
-def extract(image, front, back, output, mock, device):
+def extract(image, front, back, output, device):
     """Trích xuất thông tin từ ảnh CCCD (1 ảnh đơn hoặc cặp 2 mặt)."""
-    pipeline = CCCDPipeline(device=device, mock_mode=mock)
+    pipeline = CCCDPipeline(device=device)
 
     if front and back:
         result = pipeline.process_both_sides(front_image=front, back_image=back)

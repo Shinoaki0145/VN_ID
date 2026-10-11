@@ -1,180 +1,95 @@
-# VN_ID: Pipeline Trích Xuất & Đối Soát CCCD / Thẻ Căn Cước Đa Định Dạng
+# VN_ID
 
-Hệ thống trích xuất thông tin tự động, toàn diện từ ảnh Căn cước công dân Việt Nam, hỗ trợ đồng thời cả hai thế hệ thẻ:
-- **CCCD gắn chip (mẫu 2021)**: Mã QR mặt trước, dòng MRZ mặt sau, do Cục Cảnh sát QLHC về TTXH cấp.
-- **Thẻ Căn cước (mẫu mới 2024)**: Mã QR mặt sau, kích thước QR lớn, do Bộ Công an cấp, Nơi đăng ký khai sinh & Nơi cư trú được in ở mặt sau, hỗ trợ thông tin thân nhân (Cha/Mẹ) cho trẻ em.
+Pipeline đọc thông tin từ ảnh CCCD gắn chip (mẫu 2021) và thẻ Căn cước (mẫu 2024). Có giao diện Python, lệnh `vn-id` và REST API. Hệ thống căn ảnh, đọc QR/OCR, phân tích chữ in và MRZ, sau đó hợp nhất và đối chiếu các trường.
 
----
+> `success=true` chỉ cho biết đã trích xuất được ít nhất một trường nhận dạng hoặc cấp thẻ. Nó không xác nhận thẻ thật, người sở hữu thẻ, hay độ chính xác của mọi trường. Hãy kiểm tra `field_sources` và `validation.warnings`.
 
-## 🚀 Điểm Nổi Bật
+## Cài đặt
 
-1. **Kiến trúc Hybrid 100% Rule-Based Parser (Loại bỏ hoàn toàn PhoBERT / NER cồng kềnh)**:
-   - **Text Detector**: Sử dụng mô hình DBNet18 (EasyOCR) phát hiện bounding box chữ chính xác.
-   - **Text Recognizer**: Sử dụng mô hình VietOCR (VGG Seq2Seq) tối ưu cho tiếng Việt có dấu với cơ chế đệm an toàn `pad_y = 4`, `pad_x = 2` bảo toàn trọn vẹn dấu thanh (`?`, `~`, `.`).
-   - **Bóc tách thực thể thuần Regex Rules**: Bóc tách họ tên, số định danh, ngày sinh, quê quán, nơi cư trú, hạn sử dụng, cơ quan cấp và MRZ với tốc độ siêu nhanh ($\approx 1\text{ms}$), không phụ thuộc mô hình NER nặng nề.
-2. **QR Decoder (QReader)**:
-   - Sử dụng **QReader (YOLOv8 + pyzbar)** để phát hiện và giải mã QR.
-   - Tự động crop và giải mã vùng QR theo từng mặt (mặt trước cho CCCD 2021 và mặt sau góc trên cho Căn cước 2024).
-   - Khi đọc được QR code, dữ liệu đạt độ chính xác 100%, triệt tiêu hoàn toàn sai sót từ OCR.
-3. **Data Fusion & Đối Soát Nghiệp Vụ Tự Động**:
-   - Cơ chế ưu tiên dữ liệu thông minh: `QR Code > Front Parser > Back Parser`.
-   - Đối soát chéo 12 số định danh: Kiểm tra tính hợp lệ của mã 63 tỉnh/thành, chữ số thế kỷ & giới tính, 2 chữ số năm sinh.
-   - Tự động suy luận giới tính từ chữ số thứ 4 của mã số CCCD nếu hình ảnh bị mờ trường giới tính.
-   - Chuẩn hóa Unicode tiếng Việt chuẩn dựng sẵn (NFC).
-   - MRZ mặt sau CCCD 2021 bổ sung `id`, `dob`, `gender`, `expiry_date` khi thiếu, với `field_sources` là `mrz`; dữ liệu QR/chữ in vẫn được ưu tiên.
-   - Khi ID bị che hoặc không đọc được, dòng MRZ có checksum ngày sinh hợp lệ vẫn cung cấp giới tính (`M` → `Nam`, `F` → `Nữ`). Ngày sinh đầy đủ giữ `null` nếu chưa xác định được thế kỷ từ ID.
-   - `validation.mrz_checks` ghi kết quả đối chiếu từng trường (`true` = khớp, `false` = lệch). Trường điền trực tiếp từ MRZ không được coi là đã đối chiếu độc lập.
-   - `validation.mrz_checksums` ghi các phép kiểm tra checksum: `document_number`, `dob`, `expiry_date`, `composite`; `null` nghĩa là chưa đủ ký tự để kiểm tra.
-   - MRZ bị cắt mất phần cuối vẫn có thể cung cấp dữ liệu theo vị trí ký tự. MRZ không cung cấp ngày cấp, nơi cấp hoặc tên tiếng Việt có dấu.
-4. **Đo Độ Trễ (Latency Breakdown) Toàn Diện & Chi Tiết**:
-   - Đo đạc chính xác thời gian thực thi (milliseconds) của từng bước độc lập:
-     - `front_align_ms`, `back_align_ms` (Căn chỉnh 4 góc thẻ).
-     - `qr_ms` (Giải mã QR code).
-     - `front_ocr_det_ms`, `back_ocr_det_ms` (Text Detection - mô hình DBNet18).
-     - `front_ocr_rec_ms`, `back_ocr_rec_ms` (Text Recognition - mô hình VietOCR VGG Seq2Seq).
-     - `front_ocr_sort_ms`, `back_ocr_sort_ms` (Sắp xếp thứ tự đọc ReadingOrderSorter).
-     - `front_ocr_ms`, `back_ocr_ms` (Tổng thời gian OCR từng mặt).
-     - `front_rules_ms`, `back_rules_ms` (Bóc tách quy tắc thực thể Regex).
-     - `fusion_ms` (Hợp nhất dữ liệu & đối soát nghiệp vụ).
-     - `total_ms` (Tổng thời gian xử lý toàn bộ pipeline).
-
----
-
-## 📁 Cấu Trúc Thư Mục
-
-```
-VN_ID/
-├── vn_id/
-│   ├── pipeline.py            # Orchestrator trung tâm quản lý luồng xử lý & đo latency
-│   ├── core/
-│   │   ├── config.py          # Quản lý đường dẫn model weights (.models/) & kích thước chuẩn
-│   │   ├── constants.py       # Bảng mã 63 tỉnh/thành, bảng thế kỷ & giới tính, keywords thẻ
-│   │   ├── schemas.py         # Pydantic schemas (FinalCCCDResult, CCCDData, FrontSideResult, ...)
-│   │   └── utils.py           # Tiện ích bỏ dấu tiếng Việt, chuẩn hóa ngày tháng DD/MM/YYYY
-│   ├── aligner/               # Nắn thẳng thẻ (Perspective Warp), phân loại mặt & cắt vùng QR
-│   ├── ocr/                   # EasyOCR (DBNet18 detector) + VietOCR (VGG Seq2Seq recognizer)
-│   ├── parser/                # Bóc tách thực thể 100% Rule-based Regex
-│   │   ├── common.py          # Regex patterns chung (ngày tháng, cư trú, khai sinh)
-│   │   ├── front.py           # FrontRuleExtractor (bóc tách mặt trước)
-│   │   ├── back.py            # BackRuleExtractor (bóc tách mặt sau 2021 & 2024, MRZ)
-│   │   ├── mrz.py             # MRZ CCCD theo vị trí ký tự, checksum và ngày hợp lệ
-│   │   └── mock.py            # MockRuleExtractor cho kiểm thử độc lập
-│   ├── qr/                    # Giải mã mã QR (QReader)
-│   ├── validator/             # Đối soát 12 số CCCD, hợp nhất dữ liệu (DataFusion), chuẩn hóa địa chỉ
-│   ├── api/                   # REST API backend (FastAPI)
-│   └── cli/                   # Giao diện dòng lệnh CLI (Click)
-├── tests/                     # Toàn bộ 42 unit & integration tests
-├── image/                     # Bộ ảnh mẫu thực tế (CCCD 2021, Căn cước 2024, ảnh mờ, QR hỏng)
-├── output/                    # Thư mục lưu file JSON kết quả trích xuất
-├── test_run.py                # Script chạy kiểm thử toàn diện trên dữ liệu ảnh thực tế
-├── test_pipeline.ipynb        # Jupyter Notebook kiểm thử trực quan với latency breakdown
-└── pyproject.toml             # Khai báo package & dependencies
-```
-
----
-
-## 🛠️ Cài Đặt
-
-Yêu cầu Python >= 3.10:
+Yêu cầu Python 3.10 trở lên. Chạy các lệnh từ thư mục gốc repo.
 
 ```bash
-git clone <repo-url>
-cd VN_ID
+uv sync --locked
+uv run vn-id extract image/front_moi_1.jpg -o result.json
+uv run --with pytest pytest -q
+```
+
+Nếu dùng pip, tạo môi trường ảo rồi cài từ file yêu cầu:
+
+```bash
 python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+. .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
----
+`requirements.txt` cài package ở chế độ editable và lấy dependency từ `pyproject.toml`; pip không dùng `uv.lock`. Cài thêm `pytest` nếu chạy test. Bộ dependency gồm EasyOCR, VietOCR, QReader và PyTorch, có thể chiếm nhiều GB. Lần đầu chạy cần mạng để tải model. `--device auto` dùng CUDA nếu PyTorch nhận GPU, nếu không thì CPU; dùng `--device cpu` để ép CPU.
 
-## 💻 Hướng Dẫn Sử Dụng
+## Sử dụng
 
-### 1. Dùng trong Python Code
+### CLI
+
+```bash
+# Một ảnh, tự phân loại mặt bằng OCR
+uv run vn-id extract image/front_moi_1.jpg -o result.json
+
+# Ép mặt, tránh nhầm phân loại
+uv run vn-id extract --front image/front_moi_1.jpg -o result.json
+uv run vn-id extract --back image/back_cu_7.jpg -o result.json
+
+# Hai mặt cùng một thẻ
+uv run vn-id extract --front image/front_moi_1.jpg --back image/back_moi_1.jpg -o result.json
+```
+
+Thư mục cha của `-o` phải tồn tại. Chỉ ghép hai ảnh của cùng một thẻ.
+
+### Python
 
 ```python
-from vn_id import CCCDPipeline
+from vn_id import CCCDPipeline, CardSide
 
-# Khởi tạo pipeline (device="auto" tự động nhận diện GPU/CPU)
-pipeline = CCCDPipeline(device="auto", mock_mode=False)
+pipeline = CCCDPipeline(device="cpu")
+result = pipeline.process_both_sides("image/front_moi_1.jpg", "image/back_moi_1.jpg")
+print(result.model_dump_json(indent=2))
+print(result.data.name, result.field_sources.get("name"))
 
-# Trích xuất cả 2 mặt (Mặt trước + Mặt sau)
-result = pipeline.process_both_sides(
-    front_image="image/front_moi_2.jpg",
-    back_image="image/back_moi_2.jpg",
-)
-
-# In kết quả trích xuất
-print("Họ và tên:", result.data.name)
-print("Số CCCD  :", result.data.id)
-print("Ngày sinh:", result.data.dob)
-print("Địa chỉ  :", result.data.residence)
-
-# In bảng đo độ trễ từng bước
-print("\n[Latency Breakdown]")
-for step, ms in result.timings.items():
-    print(f"  - {step:<18}: {ms:8.2f} ms")
+back = pipeline.process("image/back_cu_7.jpg", force_side=CardSide.BACK)
+print(back.validation.warnings)
 ```
 
-### 2. Dùng Script Kiểm Thử Thực Tế (`test_run.py`)
+`process` nhận đường dẫn, bytes hoặc mảng NumPy. `process_both_sides` nhận ảnh trước và sau đúng thứ tự.
 
-Chạy script kiểm tra tự động trên tất cả các mẫu thẻ (CCCD 2021, Căn cước 2024, QR mờ):
+### API
 
 ```bash
-python test_run.py
+uv run uvicorn vn_id.api.app:app --host 127.0.0.1 --port 8000
+curl -F "file=@image/front_moi_1.jpg" http://127.0.0.1:8000/api/v1/extract
+curl -F "front=@image/front_moi_1.jpg" -F "back=@image/back_moi_1.jpg" http://127.0.0.1:8000/api/v1/extract-both
 ```
 
-### 3. Dùng Jupyter Notebook (`test_pipeline.ipynb`)
+Swagger UI: `http://127.0.0.1:8000/docs`; health check: `GET /health`. Ảnh không giải mã được trả HTTP 400. `/health` chỉ xác nhận ứng dụng khởi động, không kiểm tra model đã tải. API chưa có xác thực; ví dụ chỉ bind localhost.
 
-Mở notebook để xem trực quan hình ảnh thẻ, kết quả trích xuất dạng bảng và biểu đồ độ trễ:
+## Kết quả
 
-```bash
-jupyter notebook test_pipeline.ipynb
-```
+| Trường | Ý nghĩa |
+|---|---|
+| `success` | Có ít nhất một trường nhận dạng/cấp thẻ được trích xuất |
+| `side_detected` | Mặt đã xử lý theo lệnh gọi hoặc phân loại OCR |
+| `data` | Thông tin hợp nhất; trường không đọc được là `null` |
+| `field_sources` | Nguồn của từng trường: `qr`, `front_rules`, `back_rules`, `mrz`, `id_deduced`, `default` |
+| `validation` | Kiểm tra cấu trúc ID, đối chiếu MRZ và cảnh báo |
+| `timings` | Thời gian từng bước, đơn vị mili giây |
 
-Lần đầu đọc MRZ, pipeline tự tải model `latin_g2.pth` vào `.easyocr_models/model/` nếu thiếu (ví dụ trên Colab mới). Nếu tải hoặc đọc MRZ thất bại, log ghi nguyên nhân và pipeline tiếp tục dùng OCR thông thường.
+Thứ tự ưu tiên khác nhau theo từng trường; xem [luồng xử lý](docs/architecture.md). QR có thể sai hoặc bị thay đổi, nên vẫn cần đối chiếu.
 
-DBNet dùng `canvas_size=1600` cho ảnh thẻ và `640` cho vùng MRZ để giới hạn kích thước xử lý. OCR giữ nguyên thiết bị đã chọn, kể cả khi gặp CUDA OOM; lỗi được ghi vào log và không tự chuyển sang CPU.
+## Cấu hình và kiểm thử
 
-Trên Colab, sau khi cập nhật mã nguồn cần dừng process đang giữ phiên bản cũ rồi chạy lại cell xử lý ảnh (mục 6):
+- [`pyproject.toml`](pyproject.toml) khai báo package và thư viện OCR/QR cần thiết. [`uv.lock`](uv.lock) khóa phiên bản để `uv sync --locked` cài lặp lại; pip không dùng lock này.
+- [`vn_id/ocr/vgg_seq2seq.yml`](vn_id/ocr/vgg_seq2seq.yml) là cấu hình VietOCR. File `.easyocr_models/model/vgg_seq2seq.pth` được ưu tiên nếu có; nếu không, VietOCR tải từ URL trong YAML. `device` trong YAML được ghi đè lúc chạy.
+- Kiểm thử: `uv run --with pytest pytest -q`. Test ảnh thật sẽ bỏ qua nếu thiếu trọng số model. Hướng dẫn chi tiết: [docs/running.md](docs/running.md).
+- `test_run.py` chạy cặp ảnh mẫu hiện có (`front_moi_1.jpg` và `back_moi_1.jpg`), hoặc nhận `--front`/`--back`/`--output`: `uv run python test_run.py`.
 
-```python
-if "vnid_worker" in globals():
-    vnid_worker.terminate()
-    vnid_worker.wait()
-    del vnid_worker
-```
+## Tài liệu
 
-Nếu bước MRZ gặp OOM, pipeline giữ phần OCR đã đọc thành công và ghi nguyên nhân vào log.
-
-### 4. Dùng Giao Diện Dòng Lệnh (CLI)
-
-```bash
-# Trích xuất 1 ảnh (tự động nhận diện mặt)
-vn-id extract image/front_cu.jpg -o output/result.json
-
-# Trích xuất cặp 2 mặt
-vn-id extract --front image/front_moi_2.jpg --back image/back_moi_2.jpg -o output/result.json
-
-# Chạy chế độ Mock test nhanh không cần load model
-vn-id extract image/front_cu.jpg --mock
-```
-
-### 5. Dùng REST API (FastAPI)
-
-Khởi động server backend:
-```bash
-uvicorn vn_id.api.app:app --host 0.0.0.0 --port 8000 --reload
-```
-- Truy cập tài liệu tương tác Swagger UI: `http://localhost:8000/docs`
-- `POST /api/v1/extract`: Trích xuất 1 ảnh (upload file)
-- `POST /api/v1/extract-both`: Trích xuất cặp 2 ảnh mặt trước và mặt sau
-
----
-
-## 🧪 Chạy Toàn Bộ Kiểm Thử (Unit Tests)
-
-Hệ thống đi kèm bộ kiểm thử toàn diện gồm **42 test cases**:
-
-```bash
-pytest
-```
+- [Cài đặt, chạy, kiểm thử và xử lý lỗi](docs/running.md)
+- [Kiến trúc, luồng dữ liệu và quy tắc hợp nhất](docs/architecture.md)
+- [Kết quả rà soát, rủi ro còn lại và lộ trình](docs/audit-and-roadmap.md)

@@ -1,16 +1,12 @@
-import io
-import cv2
-import numpy as np
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from vn_id.api.app import app
+from vn_id.core.config import EASYOCR_STORAGE_DIR, VIETOCR_WEIGHTS_PATH, QR_WEIGHTS_DIR
 
 client = TestClient(app)
 
-def _get_valid_png_bytes() -> bytes:
-    img = np.zeros((100, 100, 3), dtype=np.uint8)
-    _, buf = cv2.imencode(".png", img)
-    return buf.tobytes()
 
 def test_api_health():
     res = client.get("/health")
@@ -19,34 +15,35 @@ def test_api_health():
     assert data["status"] == "ok"
     assert "version" in data
     assert "device" in data
+    for path in ("/api/v1/extract", "/api/v1/extract-both"):
+        parameters = app.openapi()["paths"][path]["post"].get("parameters", [])
+        assert parameters == []
 
-def test_api_extract_single_mock():
-    png_bytes = _get_valid_png_bytes()
-    fake_img = io.BytesIO(png_bytes)
-    res = client.post(
-        "/api/v1/extract?mock=true",
-        files={"file": ("front.png", fake_img, "image/png")}
-    )
-    assert res.status_code == 200
-    data = res.json()
-    assert data["success"] is True
-    assert data["data"]["id"] == "001098012345"
 
-def test_api_extract_both_mock():
-    png_bytes = _get_valid_png_bytes()
-    fake_front = io.BytesIO(png_bytes)
-    fake_back = io.BytesIO(png_bytes)
+@pytest.mark.parametrize("contents", [b"not an image", b""])
+def test_api_rejects_invalid_image_with_client_error(contents):
     res = client.post(
-        "/api/v1/extract-both?mock=true",
-        files={
-            "front": ("front.png", fake_front, "image/png"),
-            "back": ("back.png", fake_back, "image/png")
-        }
+        "/api/v1/extract",
+        files={"file": ("broken.png", contents, "image/png")},
     )
-    assert res.status_code == 200
-    data = res.json()
-    assert data["success"] is True
-    assert data["data"]["id"] == "001098012345"
-    assert data["data"]["issue_date"] == "24/06/2021"
-    assert data["data"]["issue_loc"] == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
+    assert res.status_code == 400
+
+
+def test_api_extracts_real_front_image():
+    for package in ("easyocr", "vietocr", "qreader"):
+        pytest.importorskip(package)
+    for weight in (
+        EASYOCR_STORAGE_DIR / "pretrained_ic15_res18.pt",
+        VIETOCR_WEIGHTS_PATH,
+        QR_WEIGHTS_DIR / "qrdet-s.pt",
+    ):
+        if not weight.is_file():
+            pytest.skip(f"Model weight missing: {weight.name}")
+    image_path = Path(__file__).resolve().parents[1] / "image/front_moi_1.jpg"
+    if not image_path.is_file():
+        pytest.skip("Sample image missing")
+    with image_path.open("rb") as image:
+        result = client.post("/api/v1/extract", files={"file": (image_path.name, image, "image/jpeg")})
+    assert result.status_code == 200
+    assert result.json()["data"]["id"] == "079183034888"
 

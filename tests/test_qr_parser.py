@@ -6,7 +6,6 @@ import cv2
 import numpy as np
 import pytest
 from vn_id.qr.decoder import QRDecoder
-from vn_id.qr.mock import MockQRDecoder
 
 
 @pytest.mark.parametrize("fails", [False, True])
@@ -149,14 +148,8 @@ def test_parse_invalid_qr_payload():
     assert not res.is_detected
     assert res.id is None
 
-def test_mock_qr_decoder():
-    decoder = MockQRDecoder(is_detected=True)
-    res = decoder.decode(None)
-    assert res.is_detected
-    assert res.id == "001098012345"
-    assert res.name == "NGUYỄN VĂN A"
-
 def test_qr_decoder_real_image():
+    pytest.importorskip("qreader")
     import os
     import cv2
     img_path = "image/front_cu.jpg"

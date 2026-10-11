@@ -242,6 +242,7 @@ def test_failed_address_retry_keeps_primary_ocr():
 
 
 def test_local_vietocr_checkpoint_does_not_download_backbone(tmp_path, monkeypatch):
+    pytest.importorskip("vietocr")
     from vietocr.tool.config import Cfg
     from vietocr.tool import predictor
 

@@ -19,7 +19,6 @@ from vn_id.core.config import (
 from vn_id.core.schemas import OCRResult, TextBox
 from vn_id.core.utils import remove_accents
 from vn_id.ocr.sorter import ReadingOrderSorter
-from vn_id.ocr.mock import MockOCREngine
 from vn_id.qr.decoder import QRDecoder
 
 
@@ -29,12 +28,10 @@ logger = logging.getLogger(__name__)
 class OCREngine:
     """OCR Engine managing text detection (DBNet) and recognition (VietOCR)."""
 
-    def __init__(self, use_mock: bool = False, device: str = "cpu", qr_decoder: QRDecoder | None = None):
-        self.use_mock = use_mock
+    def __init__(self, device: str = "cpu", qr_decoder: QRDecoder | None = None):
         self.device = device
         self.qr_decoder = qr_decoder if qr_decoder is not None else QRDecoder(device=device)
         self.sorter = ReadingOrderSorter()
-        self.mock_engine = MockOCREngine()
         self._detector = None
         self._recognizer = None
         self._mrz_reader = None
@@ -230,9 +227,6 @@ class OCREngine:
 
     def recognize(self, image: np.ndarray, is_front: bool = True) -> OCRResult:
         """Run OCR on image using DBNet (detection) + VietOCR (recognition) + ReadingOrderSorter."""
-        if self.use_mock:
-            return self.mock_engine.recognize(image, is_front=is_front)
-
         if image is None or not isinstance(image, np.ndarray) or image.size == 0:
             return OCRResult(boxes=[], full_text="", time_taken_ms=0.0)
 

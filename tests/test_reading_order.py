@@ -1,7 +1,5 @@
-import pytest
 from vn_id.core.schemas import TextBox
 from vn_id.ocr.sorter import ReadingOrderSorter
-from vn_id.ocr.mock import MockOCREngine
 
 def test_reading_order_sorter():
     # 2 dòng với các boxes bị đảo lộn
@@ -22,14 +20,3 @@ def test_reading_order_sorter():
     assert sorted_res.boxes[1].line_number == 1
     assert sorted_res.boxes[2].line_number == 2
     assert sorted_res.boxes[3].line_number == 2
-
-def test_mock_ocr_engine():
-    mock_ocr = MockOCREngine()
-    res = mock_ocr.recognize(image=None, is_front=True)
-    assert len(res.boxes) > 0
-    assert "CĂN CƯỚC" in res.full_text or "Họ và tên" in res.full_text
-
-    back_res = mock_ocr.recognize(image=None, is_front=False)
-    assert "Ngày, tháng, năm" in back_res.full_text
-    assert "CỤC TRƯỞNG CỤC CẢNH SÁT" in back_res.full_text
-    assert "QUẢN LÝ HÀNH CHÍNH VỀ TRẬT TỰ XÃ HỘI" in back_res.full_text
