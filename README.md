@@ -73,6 +73,7 @@ Swagger UI: `http://127.0.0.1:8000/docs`; health check: `GET /health`. Ảnh kh�
 | Trường | Ý nghĩa |
 |---|---|
 | `success` | Có ít nhất một trường nhận dạng/cấp thẻ được trích xuất |
+| `card_version` | `can_cuoc_cong_dan_2021`, `can_cuoc_2024` hoặc `unknown`; suy ra từ tiêu đề mặt trước và dấu hiệu mặt sau |
 | `side_detected` | Mặt đã xử lý theo lệnh gọi hoặc phân loại OCR |
 | `data` | Thông tin hợp nhất; trường không đọc được là `null` |
 | `field_sources` | Nguồn của từng trường: `qr`, `front_rules`, `back_rules`, `mrz`, `id_deduced`, `default` |

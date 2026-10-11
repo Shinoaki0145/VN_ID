@@ -17,6 +17,26 @@ from vn_id.parser.common import (
 class FrontRuleExtractor:
     """Extracts front card entities based on anchor keywords, patterns, and regex."""
 
+    @staticmethod
+    def detect_card_version(text: str) -> str:
+        """Use the front title only; abstain if OCR did not read it clearly."""
+        lines = [remove_accents(line).upper().strip() for line in text.splitlines() if line.strip()][:5]
+        for index, line in enumerate(lines):
+            if re.fullmatch(r"CAN\s+CUOC\s+CONG\s+DAN", line):
+                return "can_cuoc_cong_dan_2021"
+            if line == "CAN CUOC" and index + 1 < len(lines) and lines[index + 1] == "CONG DAN":
+                return "can_cuoc_cong_dan_2021"
+        old_layout = any(
+            marker in remove_accents(text).upper()
+            for marker in ("NOI THUONG TRU", "QUE QUAN", "CO GIA TRI DEN")
+        )
+        for index, line in enumerate(lines):
+            if line == "CAN CUOC" and not old_layout and (
+                index + 1 == len(lines) or not lines[index + 1].startswith("CONG")
+            ):
+                return "can_cuoc_2024"
+        return "unknown"
+
     @classmethod
     def extract_raw(cls, text: str) -> dict[str, str]:
         results: dict[str, str] = {}
@@ -218,6 +238,7 @@ class FrontRuleExtractor:
             gender = "Nam" if century_code % 2 == 0 else "Nữ"
 
         return FrontSideResult(
+            card_version=cls.detect_card_version(text),
             id=cccd_id,
             name=name,
             dob=dob,

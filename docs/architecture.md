@@ -25,6 +25,10 @@ flowchart LR
 5. `FrontRuleExtractor` và `BackRuleExtractor` dùng quy tắc chuỗi/regex để tìm các trường. MRZ bổ sung ID, ngày sinh, giới tính, hạn dùng nếu đủ điều kiện; checksum được lưu riêng.
 6. `DataFusion` chọn nguồn cho từng trường, chuẩn hóa Unicode, kiểm tra cấu trúc số căn cước, đối chiếu MRZ và tạo `FinalCCCDResult`.
 
+### Phân biệt phiên bản thẻ
+
+Ở mặt trước, tiêu đề OCR `Căn cước công dân` xác định mẫu `can_cuoc_cong_dan_2021`; dòng tiêu đề `Căn cước` đứng riêng xác định mẫu `can_cuoc_2024`. Nếu dòng `Căn cước` đi cùng dấu hiệu bố cục cũ như `Nơi thường trú`, `Quê quán` hoặc `Có giá trị đến`, bộ phân loại để `unknown` để tránh đoán sai khi OCR bỏ sót `Công dân`. Mặt sau được phân loại theo các nhãn riêng của từng mẫu trong `BackRuleExtractor`. **Cả hai mẫu đều có MRZ**, nên MRZ hoặc chữ `IDVNM` một mình không xác định phiên bản thẻ. Kết quả cuối có trường `card_version`; khi hai mặt cho phiên bản khác nhau, trường này là `unknown` và có cảnh báo trong `validation.warnings`. Tiêu đề mờ, mất chữ hoặc OCR sai vẫn có thể khiến kết quả là `unknown` hoặc phân loại nhầm, nên không dùng trường này để xác thực thẻ.
+
 ### MRZ được đọc như thế nào
 
 Vùng MRZ ở phần dưới mặt sau được DBNet18 tìm theo dòng. EasyOCR nhận dạng các dòng này bằng model `latin_g2` (được chọn tự động khi khởi tạo Reader với `['vi', 'en']`). Đây là **model**: nó xem ảnh và dự đoán xác suất cho các ký tự. `greedy` là **cách giải mã** đầu ra của model: ở mỗi bước, chọn ký tự có xác suất cao nhất rồi xử lý ký tự lặp và ký tự trống theo CTC để tạo chuỗi. Hai thứ được dùng cùng nhau, không phải hai model thay thế nhau. MRZ chỉ cho phép các ký tự `0–9`, `A–Z`, `<`; VietOCR dùng cho chữ thông thường trên thẻ. Sau OCR, parser đọc các vị trí cố định và kiểm tra checksum MRZ.

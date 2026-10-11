@@ -11,7 +11,7 @@ def test_extract_back_side_cccd_2021():
         "FOR ADMINISTRATIVE MANAGEMENT OF SOCIAL ORDER"
     )
     res = BackSideExtractor.extract(text)
-    assert res.card_version == "cccd_chip_2021"
+    assert res.card_version == "can_cuoc_cong_dan_2021"
     assert res.issue_date == "24/06/2021"
     assert res.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
     assert res.expiry_date is None
@@ -23,7 +23,7 @@ def test_extract_back_side_cccd_2021_with_spaces_and_dot():
         "CỤC CẢNH SÁT QUẢN LÝ HÀNH CHÍNH VỀ TRẬT TỰ XÃ HỘI"
     )
     res = BackSideExtractor.extract(text)
-    assert res.card_version == "cccd_chip_2021"
+    assert res.card_version == "can_cuoc_cong_dan_2021"
     assert res.issue_date == "05/09/2022"
     assert res.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
 
@@ -69,5 +69,13 @@ def test_extract_back_side_can_cuoc_2024_with_typos():
     assert "Place" not in res.origin
     assert "bỉrth" not in res.origin
     assert "Hòa Hiệp Bẳc" in res.origin
+
+
+@pytest.mark.parametrize("text", [
+    "IDVNM0690052512046069005251<<0",
+    "Ngày, tháng, năm / Date, month, year: 24/06/2021",
+])
+def test_mrz_or_generic_date_alone_does_not_identify_card_version(text):
+    assert BackSideExtractor.extract(text).card_version == "unknown"
 
 

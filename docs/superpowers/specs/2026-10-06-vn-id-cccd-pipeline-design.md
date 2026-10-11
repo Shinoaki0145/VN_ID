@@ -100,7 +100,7 @@ class AlignedCardResult(BaseModel):
 ### 3.2 Kết quả Bóc tách Mặt sau (`BackSideResult`)
 ```python
 class BackSideResult(BaseModel):
-    card_version: str               # "cccd_chip_2021" | "can_cuoc_2024" | "unknown"
+    card_version: str               # "can_cuoc_cong_dan_2021" | "can_cuoc_2024" | "unknown"
     issue_date: str | None = None   # DD/MM/YYYY (Ngày cấp)
     expiry_date: str | None = None  # DD/MM/YYYY (Ngày hết hạn - đối với thẻ Căn cước mới)
     issue_loc: str | None = None    # "Cục Cảnh sát QLHC về TTXH" hoặc "Bộ Công an"

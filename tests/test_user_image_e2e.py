@@ -157,7 +157,7 @@ def test_cccd_2021_back_preserves_issuer(real_pipeline):
     ocr = real_pipeline.ocr_engine.recognize(aligned, is_front=False)
     result = BackSideExtractor.extract(ocr.full_text, mrz_text=ocr.mrz_text)
 
-    assert result.card_version == "cccd_chip_2021"
+    assert result.card_version == "can_cuoc_cong_dan_2021"
     assert result.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
     assert result.expiry_date == "01/01/2033"
 

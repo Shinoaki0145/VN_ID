@@ -40,6 +40,7 @@ class OCRResult(BaseModel):
 
 class FrontSideResult(BaseModel):
     """Result of front card entity extraction using rule-based parser."""
+    card_version: str = "unknown"  # "can_cuoc_cong_dan_2021" | "can_cuoc_2024" | "unknown"
     id: str | None = None
     name: str | None = None
     dob: str | None = None  # DD/MM/YYYY
@@ -68,7 +69,7 @@ class MRZResult(BaseModel):
 
 
 class BackSideResult(BaseModel):
-    card_version: str = "unknown"  # "cccd_chip_2021" | "can_cuoc_2024" | "unknown"
+    card_version: str = "unknown"  # "can_cuoc_cong_dan_2021" | "can_cuoc_2024" | "unknown"
     issue_date: str | None = None  # DD/MM/YYYY
     expiry_date: str | None = None  # DD/MM/YYYY (Thẻ Căn cước 2024)
     issue_loc: str | None = None  # Nơi cấp (Cục Cảnh sát QLHC về TTXH / Bộ Công an)
@@ -131,6 +132,7 @@ CCCCDData = CCCDData
 
 class FinalCCCDResult(BaseModel):
     success: bool = False
+    card_version: str = "unknown"
     side_detected: list[str] = Field(default_factory=list)
     data: CCCDData = Field(default_factory=CCCDData)
     field_sources: dict[str, str] = Field(default_factory=dict)

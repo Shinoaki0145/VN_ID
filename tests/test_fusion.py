@@ -20,7 +20,7 @@ def test_fusion_qr_priority_over_ocr():
         residence="Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội"
     )
     back = BackSideResult(
-        card_version="cccd_chip_2021",
+        card_version="can_cuoc_cong_dan_2021",
         issue_date="24/06/2021",
         issue_loc="Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
     )

@@ -32,6 +32,10 @@ class DataFusion:
         t_fusion_start = time.time()
         # Resolve front extractor result
         front_res = front
+        front_version = front_res.card_version if front_res else "unknown"
+        back_version = back.card_version if back else "unknown"
+        version_conflict = front_version != "unknown" and back_version != "unknown" and front_version != back_version
+        card_version = "unknown" if version_conflict else (back_version if back_version != "unknown" else front_version)
 
         # Determine detected sides cleanly
         if side_detected is not None:
@@ -179,6 +183,8 @@ class DataFusion:
         validation.mrz_checks = mrz_checks
         validation.mrz_checksums = dict(mrz.checksums) if mrz else {}
         validation.warnings.extend(mrz_warnings)
+        if version_conflict:
+            validation.warnings.append("card_version: front and back OCR disagree.")
 
         # Ensure all fields are normalized to standard Unicode NFC precomposed form
         for field_name in [
@@ -196,6 +202,7 @@ class DataFusion:
 
         return FinalCCCDResult(
             success=success,
+            card_version=card_version,
             side_detected=detected_sides,
             data=data,
             field_sources=field_sources,

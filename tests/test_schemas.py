@@ -7,7 +7,7 @@ from vn_id.core.constants import PROVINCE_CODES, GENDER_CENTURY_MAP
 
 def test_schemas_validation():
     back_res = BackSideResult(
-        card_version="cccd_chip_2021",
+        card_version="can_cuoc_cong_dan_2021",
         issue_date="24/06/2021",
         issue_loc="Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
         raw_text="Ngày, tháng, năm / Date, month, year 24/06/2021\nCỤC CẢNH SÁT QUẢN LÝ HÀNH CHÍNH VỀ TRẬT TỰ XÃ HỘI"
