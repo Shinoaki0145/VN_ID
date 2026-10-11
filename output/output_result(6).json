@@ -1,0 +1,70 @@
+{
+  "success": true,
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "054205010560",
+    "cmnd_old": null,
+    "name": "Trần Hoài Thiện Nhân",
+    "dob": "10/04/2005",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "Hòa Hiệp Bắc, Thị xã Đông Hòa, Phú Yên",
+    "residence": "234 Tân Trào, Bình Kiến, Tuy Hòa, Phú Yên",
+    "issue_date": "13/05/2021",
+    "expiry_date": "10/04/2030",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "qr",
+    "name": "qr",
+    "dob": "qr",
+    "gender": "qr",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "qr",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "mrz"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": true,
+      "dob": true,
+      "gender": true
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": null
+    },
+    "warnings": []
+  },
+  "timings": {
+    "front_align_ms": 81.31957054138184,
+    "qr_ms": 74.56207275390625,
+    "front_ocr_det_ms": 483.28614234924316,
+    "front_ocr_rec_ms": 804.6057224273682,
+    "front_ocr_sort_ms": 0.7474422454833984,
+    "front_ocr_ms": 1288.6919975280762,
+    "front_rules_ms": 0.41556358337402344,
+    "back_align_ms": 73.43673706054688,
+    "back_ocr_det_ms": 446.5181827545166,
+    "back_ocr_rec_ms": 904.0119647979736,
+    "back_ocr_sort_ms": 0.354766845703125,
+    "back_ocr_ms": 1350.9845733642578,
+    "back_rules_ms": 0.4467964172363281,
+    "fusion_ms": 0.11110305786132812,
+    "total_ms": 2929.50177192688
+  }
+}

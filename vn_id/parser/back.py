@@ -46,13 +46,9 @@ class BackRuleExtractor:
             or "CUC CANH SAT" in clean_text
             or "QUAN LY HANH CHINH" in clean_text
             or "TRAT TU XA HOI" in clean_text
-            or "DATE" in clean_text
-            or "NGAY" in clean_text
-            or "IDVNM" in clean_text
-            or mrz is not None
         )
 
-        version = "can_cuoc_2024" if is_2024 else ("cccd_chip_2021" if is_2021 else "unknown")
+        version = "can_cuoc_2024" if is_2024 else ("can_cuoc_cong_dan_2021" if is_2021 else "unknown")
 
         issue_date: str | None = None
         expiry_date: str | None = None

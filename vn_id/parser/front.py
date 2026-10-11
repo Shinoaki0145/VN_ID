@@ -1,4 +1,5 @@
 """Front-side rule-based extractor for Vietnamese CCCD / ID cards."""
+from datetime import date
 import re
 from vn_id.core.utils import remove_accents, normalize_date
 from vn_id.core.constants import PROVINCE_CODES
@@ -15,6 +16,26 @@ from vn_id.parser.common import (
 
 class FrontRuleExtractor:
     """Extracts front card entities based on anchor keywords, patterns, and regex."""
+
+    @staticmethod
+    def detect_card_version(text: str) -> str:
+        """Use the front title only; abstain if OCR did not read it clearly."""
+        lines = [remove_accents(line).upper().strip() for line in text.splitlines() if line.strip()][:5]
+        for index, line in enumerate(lines):
+            if re.fullmatch(r"CAN\s+CUOC\s+CONG\s+DAN", line):
+                return "can_cuoc_cong_dan_2021"
+            if line == "CAN CUOC" and index + 1 < len(lines) and lines[index + 1] == "CONG DAN":
+                return "can_cuoc_cong_dan_2021"
+        old_layout = any(
+            marker in remove_accents(text).upper()
+            for marker in ("NOI THUONG TRU", "QUE QUAN", "CO GIA TRI DEN")
+        )
+        for index, line in enumerate(lines):
+            if line == "CAN CUOC" and not old_layout and (
+                index + 1 == len(lines) or not lines[index + 1].startswith("CONG")
+            ):
+                return "can_cuoc_2024"
+        return "unknown"
 
     @classmethod
     def extract_raw(cls, text: str) -> dict[str, str]:
@@ -151,8 +172,28 @@ class FrontRuleExtractor:
         elif "KHONG THOI HAN" in clean_text or "VO THOI HAN" in clean_text:
             results["expiry_date"] = "Không thời hạn"
 
-        # 6. Fallback province detection if residence or origin still missing
-        if "residence" not in results or "origin" not in results:
+        if "expiry_date" not in results:
+            after_residence = False
+            for line in lines:
+                clean_line = remove_accents(line).upper()
+                if "NOI THUONG TRU" in clean_line or "NOI CU TRU" in clean_line:
+                    after_residence = True
+                    continue
+                if not after_residence or not ("DATE" in clean_line or "CO GIA" in clean_line):
+                    continue
+                for match in re.finditer(r"(?<![\d/])(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?!\d)", line):
+                    d, m, y = match.groups()
+                    try:
+                        date(int(y), int(m), int(d))
+                    except ValueError:
+                        continue
+                    results["expiry_date"] = normalize_date(d, m, y)
+                    break
+                if "expiry_date" in results:
+                    break
+
+        # 6. A province without a residence label cannot identify a residence.
+        if "origin" not in results:
             found_locs: list[str] = []
             for line in lines:
                 clean_l = remove_accents(line).upper()
@@ -164,17 +205,19 @@ class FrontRuleExtractor:
                         break
 
             if found_locs:
-                if "origin" not in results and "residence" not in results:
-                    if len(found_locs) >= 2:
-                        results["origin"] = found_locs[0]
-                        results["residence"] = found_locs[1]
-                    else:
-                        results["origin"] = found_locs[0]
-                        results["residence"] = found_locs[0]
-                elif "origin" not in results:
-                    results["origin"] = found_locs[0]
-                elif "residence" not in results:
-                    results["residence"] = found_locs[-1]
+                results["origin"] = found_locs[0]
+
+        for field in ("origin", "residence"):
+            address = results.get(field, "")
+            if "," not in address:
+                continue
+            prefix, _, province = address.rpartition(",")
+            matches = [
+                name for name in PROVINCE_CODES.values()
+                if remove_accents(name).casefold() == remove_accents(province.strip()).casefold()
+            ]
+            if len(matches) == 1:
+                results[field] = f"{prefix}, {matches[0]}"
 
         return results
 
@@ -195,6 +238,7 @@ class FrontRuleExtractor:
             gender = "Nam" if century_code % 2 == 0 else "Nữ"
 
         return FrontSideResult(
+            card_version=cls.detect_card_version(text),
             id=cccd_id,
             name=name,
             dob=dob,
@@ -210,4 +254,3 @@ class FrontRuleExtractor:
                 "dob": 0.95 if dob else 0.0,
             },
         )
-

@@ -55,7 +55,7 @@ from vn_id.core.constants import PROVINCE_CODES, GENDER_CENTURY_MAP
 
 def test_schemas_validation():
     back_res = BackSideResult(
-        card_version="cccd_chip_2021",
+        card_version="can_cuoc_cong_dan_2021",
         issue_date="24/06/2021",
         issue_loc="Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
         raw_text="Ngày, tháng, năm / Date, month, year 24/06/2021\nCỤC CẢNH SÁT QUẢN LÝ HÀNH CHÍNH VỀ TRẬT TỰ XÃ HỘI"
@@ -305,7 +305,7 @@ def test_extract_back_side_cccd_2021():
         "DIRECTOR GENERAL OF THE POLICE DEPARTMENT"
     )
     result = BackSideExtractor.extract(text)
-    assert result.card_version == "cccd_chip_2021"
+    assert result.card_version == "can_cuoc_cong_dan_2021"
     assert result.issue_date == "24/06/2021"
     # Bỏ từ CỤC TRƯỞNG theo yêu cầu user:
     assert result.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
@@ -391,7 +391,7 @@ def test_fusion_qr_over_ocr_and_back_side():
     qr = QRResult(is_detected=True, id="001098012345", name="NGUYỄN VĂN A", dob="15/08/1998", gender="Nam")
     ner = NERResult(name="NGUYEN VAN A", dob="15/08/1998")  # OCR bị mất dấu
     back = BackSideResult(
-        card_version="cccd_chip_2021",
+        card_version="can_cuoc_cong_dan_2021",
         issue_date="24/06/2021",
         issue_loc="Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
     )

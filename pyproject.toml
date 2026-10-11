@@ -12,16 +12,28 @@ requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2.0",
     "numpy>=1.24",
+    "Pillow>=10",
     "opencv-python-headless>=4.8",
     "fastapi>=0.100",
     "python-multipart>=0.0.6",
     "uvicorn>=0.22",
     "httpx>=0.24",
     "click>=8.0",
+    "easyocr>=1.7,<2",
+    "vietocr>=0.3.13,<0.4",
+    "qreader>=3.16,<4",
+    "setuptools<81", # vietocr -> gdown 4.4 imports pkg_resources
 ]
 
 [project.scripts]
 vn-id = "vn_id.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vn_id*"]
+
+[tool.setuptools.package-data]
+"vn_id.ocr" = ["vgg_seq2seq.yml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -12,30 +12,22 @@ from vn_id.core.schemas import (
     NERResult,
     BackSideResult,
 )
-from vn_id.aligner import CardAligner, MockAligner, SideClassifier
-from vn_id.ocr import OCREngine, MockOCREngine
-from vn_id.parser import FrontRuleExtractor, BackRuleExtractor, MockRuleExtractor
-from vn_id.qr import QRDecoder, MockQRDecoder
+from vn_id.aligner import CardAligner, SideClassifier
+from vn_id.ocr import OCREngine
+from vn_id.parser import FrontRuleExtractor, BackRuleExtractor
+from vn_id.qr import QRDecoder
 from vn_id.validator import DataFusion
 
 
 class CCCDPipeline:
     """End-to-end pipeline orchestrator for Vietnamese CCCD / ID card extraction."""
 
-    def __init__(self, device: str = "auto", mock_mode: bool = False):
+    def __init__(self, device: str = "auto"):
         self.device = self._resolve_device(device)
-        self.mock_mode = mock_mode
-
-        if self.mock_mode:
-            self.aligner = MockAligner()
-            self.ocr_engine = MockOCREngine()
-            self.front_extractor = MockRuleExtractor()
-            self.qr_decoder = MockQRDecoder()
-        else:
-            self.aligner = CardAligner()
-            self.qr_decoder = QRDecoder(device=self.device)
-            self.ocr_engine = OCREngine(use_mock=False, device=self.device, qr_decoder=self.qr_decoder)
-            self.front_extractor = FrontRuleExtractor
+        self.aligner = CardAligner()
+        self.qr_decoder = QRDecoder(device=self.device)
+        self.ocr_engine = OCREngine(device=self.device, qr_decoder=self.qr_decoder)
+        self.front_extractor = FrontRuleExtractor
 
     @staticmethod
     def _resolve_device(device: str) -> str:
@@ -53,6 +45,8 @@ class CCCDPipeline:
         if isinstance(image_input, np.ndarray):
             return image_input
         elif isinstance(image_input, bytes):
+            if not image_input:
+                raise ValueError("Could not decode image from provided bytes.")
             nparr = np.frombuffer(image_input, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             if img is None:

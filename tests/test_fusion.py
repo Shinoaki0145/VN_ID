@@ -20,7 +20,7 @@ def test_fusion_qr_priority_over_ocr():
         residence="Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội"
     )
     back = BackSideResult(
-        card_version="cccd_chip_2021",
+        card_version="can_cuoc_cong_dan_2021",
         issue_date="24/06/2021",
         issue_loc="Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
     )
@@ -114,3 +114,16 @@ def test_fusion_back_side_only_does_not_inject_front():
     )
     final = DataFusion.fuse(back=back, side_detected=["back"])
     assert final.side_detected == ["back"]
+
+
+@pytest.mark.parametrize("origin,residence", [
+    ("Thị trấn Hiệp Phước Nhơn Trạch, Đồng Nai", "Hiệp Phước, Nhơn Trạch, Đồng Nai"),
+    ("Hòa Hiệp Bắc Thị xã Đông Hòa, Phú Yên", "Bình Kiến, Tuy Hòa, Phú Yên"),
+])
+def test_fusion_does_not_invent_origin_commas_from_residence(origin, residence):
+    final = DataFusion.fuse(
+        front=FrontSideResult(origin=origin),
+        qr=QRResult(is_detected=True, address=residence),
+    )
+    assert final.data.origin == origin
+    assert final.data.residence == residence

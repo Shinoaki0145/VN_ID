@@ -1,0 +1,76 @@
+{
+  "success": true,
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "075097023463",
+    "cmnd_old": "272553619",
+    "name": "Bùi Xuân Thuận",
+    "dob": "29/03/1997",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "Thị trấn Hiệp Phước, Nhơn Trạch, Đồng Nai",
+    "residence": "Tổ 10, Kp Phước Hiệp, Hiệp Phước, Nhơn Trạch, Đồng Nai",
+    "issue_date": "05/06/2022",
+    "expiry_date": "29/03/2037",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "qr",
+    "cmnd_old": "qr",
+    "name": "qr",
+    "dob": "qr",
+    "gender": "qr",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "qr",
+    "issue_date": "qr",
+    "issue_loc": "back_rules",
+    "expiry_date": "front_rules"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": true,
+      "expiry_date": false
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": null
+    },
+    "warnings": [
+      "MRZ id: 049207010955 differs from qr value 075097023463.",
+      "MRZ dob: 24/04/2007 differs from qr value 29/03/1997.",
+      "MRZ expiry_date: 24/04/2032 differs from front_rules value 29/03/2037."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 9.688615798950195,
+    "qr_ms": 182.66773223876953,
+    "front_ocr_det_ms": 480.182409286499,
+    "front_ocr_rec_ms": 798.851490020752,
+    "front_ocr_sort_ms": 0.6818771362304688,
+    "front_ocr_ms": 1279.7529697418213,
+    "front_rules_ms": 0.4215240478515625,
+    "back_align_ms": 20.43628692626953,
+    "back_ocr_det_ms": 400.3486633300781,
+    "back_ocr_rec_ms": 855.1557064056396,
+    "back_ocr_sort_ms": 0.23651123046875,
+    "back_ocr_ms": 1255.8350563049316,
+    "back_rules_ms": 0.6771087646484375,
+    "fusion_ms": 0.12636184692382812,
+    "total_ms": 2771.406412124634
+  }
+}

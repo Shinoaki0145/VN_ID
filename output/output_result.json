@@ -1,0 +1,55 @@
+residence khong nhan dien duoc Bac Phuong Son
+name sai nang
+expiry_date khong quet duoc
+
+{
+  "success": true,
+  "side_detected": [
+    "front"
+  ],
+  "data": {
+    "id": "040098020586",
+    "cmnd_old": null,
+    "name": "SOCIALISTREPUBLIC OFVIETNAM",
+    "dob": "19/03/1998",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "Xuân Thành, Yên Thành, Nghệ",
+    "residence": "Xuân Thành, Yên Thành, Nghệ An",
+    "issue_date": null,
+    "expiry_date": null,
+    "issue_loc": null,
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "front_rules",
+    "name": "front_rules",
+    "dob": "front_rules",
+    "gender": "front_rules",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "front_rules"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {},
+    "mrz_checksums": {},
+    "warnings": []
+  },
+  "timings": {
+    "align_ms": 12.127399444580078,
+    "qr_ms": 777.6675224304199,
+    "ocr_det_ms": 523.3097076416016,
+    "ocr_rec_ms": 767.768144607544,
+    "ocr_sort_ms": 1.0306835174560547,
+    "ocr_ms": 1292.1702861785889,
+    "front_rules_ms": 2.662181854248047,
+    "fusion_ms": 0.16999244689941406,
+    "total_ms": 2098.44970703125
+  }
+}
