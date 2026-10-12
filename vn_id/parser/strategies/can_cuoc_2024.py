@@ -1,0 +1,135 @@
+"""Can cuoc 2024 back layout and shared front identity extraction."""
+import re
+from vn_id.core.schemas import CardVersion, BackSideResult, MRZResult
+from vn_id.core.utils import remove_accents, normalize_date
+from vn_id.parser.base import BaseCardParser
+from vn_id.parser.mrz import parse_mrz
+from vn_id.core.constants import MINISTRY_OF_PUBLIC_SECURITY
+from vn_id.parser.common import (
+    DATE_PATTERN, RESIDENCE_PATTERN, ORIGIN_PATTERN,
+    HEADER_EXCLUSIONS_BACK, clean_address_value,
+)
+
+
+class CanCuoc2024Parser(BaseCardParser):
+    version = CardVersion.CAN_CUOC_2024
+
+    def parse_back(
+        self, text: str, mrz: MRZResult | None = None, *, mrz_text: str | None = None,
+    ) -> BackSideResult:
+        mrz = mrz if mrz is not None else parse_mrz(text, mrz_text)
+        clean_text = remove_accents(text).upper()
+        issue_date = expiry_date = issue_loc = origin = residence = None
+        lines = [line.strip() for line in text.split("\n") if line.strip()]
+
+        # Extract issue date: "Ngày, tháng, năm cấp: ..."
+        m_issue = re.search(r"NGAY[^\d]{1,20}THANG[^\d]{1,20}NAM\s+CAP[^\d]*" + DATE_PATTERN, clean_text)
+        if m_issue:
+            issue_date = normalize_date(m_issue.group(1), m_issue.group(2), m_issue.group(3))
+
+        # Extract expiry date: "Ngày, tháng, năm hết hạn: ..."
+        m_expiry = re.search(r"NGAY[^\d]{1,20}THANG[^\d]{1,20}NAM\s+HET\s+HAN[^\d]*" + DATE_PATTERN, clean_text)
+        if m_expiry:
+            expiry_date = normalize_date(m_expiry.group(1), m_expiry.group(2), m_expiry.group(3))
+
+        # Issuer location
+        if "BO CONG AN" in clean_text:
+            issue_loc = MINISTRY_OF_PUBLIC_SECURITY
+
+        # Extract Residence & Origin from 2024 card back
+        for i, line in enumerate(lines):
+            clean_l = remove_accents(line).upper()
+
+            # Residence / Nơi cư trú
+            if not residence:
+                m_res = RESIDENCE_PATTERN.search(clean_l)
+                if m_res:
+                    val = clean_address_value(line[m_res.end():])
+                    clean_v = remove_accents(val).upper().strip(" 0123456789/:-_;,.")
+                    next_i = i + 1
+                    if (not val or "RESIDENC" in clean_v) and next_i < len(lines):
+                        val = lines[next_i].strip()
+                        next_i += 1
+                    elif val and next_i < len(lines):
+                        next_l = lines[next_i].strip()
+                        clean_next = remove_accents(next_l).upper()
+                        if not any(h in clean_next for h in HEADER_EXCLUSIONS_BACK) and len(next_l) > 3:
+                            val = f"{val}, {next_l}"
+                            next_i += 1
+                    residence = val.strip(" /:-_;,")
+                elif any(k in clean_l for k in ["NOI CU TRU", "NOI CUTRU", "NOI CULRU", "NOI THUONG TRU", "RESIDENC"]):
+                    if ":" in line:
+                        val = line[line.find(":") + 1:].strip(" :-,;/")
+                    else:
+                        val = ""
+                        for kw in ["NOI CU TRU", "NOI CUTRU", "NOI CULRU", "NOI THUONG TRU"]:
+                            if kw in clean_l:
+                                idx = clean_l.find(kw) + len(kw)
+                                val = line[idx:].lstrip(" :-,;/")
+                                break
+                    val = clean_address_value(val)
+                    clean_v = remove_accents(val).upper().strip(" 0123456789/:-_;,.")
+                    next_i = i + 1
+                    if (not val or "RESIDENC" in clean_v) and next_i < len(lines):
+                        val = lines[next_i].strip()
+                        next_i += 1
+                    elif val and next_i < len(lines):
+                        next_l = lines[next_i].strip()
+                        clean_next = remove_accents(next_l).upper()
+                        if not any(h in clean_next for h in HEADER_EXCLUSIONS_BACK) and len(next_l) > 3:
+                            val = f"{val}, {next_l}"
+                            next_i += 1
+                    residence = val.strip(" /:-_;,")
+
+            # Origin / Nơi đăng ký khai sinh
+            if not origin:
+                m_orig = ORIGIN_PATTERN.search(clean_l)
+                if m_orig:
+                    val = clean_address_value(line[m_orig.end():])
+                    clean_v = remove_accents(val).upper().strip(" 0123456789/:-_;,.")
+                    next_i = i + 1
+                    if (not val or "BIRTH" in clean_v or "ORIGIN" in clean_v) and next_i < len(lines):
+                        val = lines[next_i].strip()
+                        next_i += 1
+                    elif val and next_i < len(lines):
+                        next_l = lines[next_i].strip()
+                        clean_next = remove_accents(next_l).upper()
+                        if not any(h in clean_next for h in HEADER_EXCLUSIONS_BACK) and len(next_l) > 3:
+                            val = f"{val}, {next_l}"
+                            next_i += 1
+                    origin = val.strip(" /:-_;,")
+                elif any(k in clean_l for k in ["KHAI SINH", "NOI DKKS", "QUE QUAN", "BIRTH"]):
+                    if ":" in line:
+                        val = line[line.find(":") + 1:].strip(" :-,;/")
+                    else:
+                        val = ""
+                        for kw in ["NOI DANG KY KHAI SINH", "NOI DKKS", "QUE QUAN"]:
+                            if kw in clean_l:
+                                idx = clean_l.find(kw) + len(kw)
+                                val = line[idx:].lstrip(" :-,;/")
+                                break
+                    val = clean_address_value(val)
+                    clean_v = remove_accents(val).upper().strip(" 0123456789/:-_;,.")
+                    next_i = i + 1
+                    if (not val or "BIRTH" in clean_v or "ORIGIN" in clean_v) and next_i < len(lines):
+                        val = lines[next_i].strip()
+                        next_i += 1
+                    elif val and next_i < len(lines):
+                        next_l = lines[next_i].strip()
+                        clean_next = remove_accents(next_l).upper()
+                        if not any(h in clean_next for h in HEADER_EXCLUSIONS_BACK) and len(next_l) > 3:
+                            val = f"{val}, {next_l}"
+                            next_i += 1
+                    origin = val.strip(" /:-_;,")
+
+        return BackSideResult(
+            card_version=self.version,
+            issue_date=issue_date,
+            expiry_date=expiry_date,
+            issue_loc=issue_loc,
+            origin=origin,
+            residence=residence,
+            mrz=mrz,
+            mrz_raw=mrz.raw_text if mrz else None,
+            raw_text=text,
+        )

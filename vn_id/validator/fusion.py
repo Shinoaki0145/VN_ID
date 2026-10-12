@@ -1,14 +1,13 @@
 """Data fusion engine combining Front, Back, and QR Code results."""
 import time
 import unicodedata
-from typing import Any
 from vn_id.core.schemas import (
     QRResult,
     FrontSideResult,
     BackSideResult,
     FinalCCCDResult,
     CCCDData,
-    ValidationReport,
+    CardVersion,
 )
 from vn_id.validator.cccd_rules import CCCDValidator
 from vn_id.validator.fuzzy_address import AddressFuzzyMatcher
@@ -17,9 +16,8 @@ from vn_id.validator.fuzzy_address import AddressFuzzyMatcher
 class DataFusion:
     """Fuses extraction candidate fields according to priority rules: QR > Front Rules + Back Rules."""
 
-    @classmethod
-    def fuse(
-        cls,
+    def merge(
+        self,
         qr: QRResult | None = None,
         front: FrontSideResult | None = None,
         back: BackSideResult | None = None,
@@ -32,10 +30,7 @@ class DataFusion:
         t_fusion_start = time.time()
         # Resolve front extractor result
         front_res = front
-        front_version = front_res.card_version if front_res else "unknown"
-        back_version = back.card_version if back else "unknown"
-        version_conflict = front_version != "unknown" and back_version != "unknown" and front_version != back_version
-        card_version = "unknown" if version_conflict else (back_version if back_version != "unknown" else front_version)
+        card_version, version_conflict = self.resolve_card_version(front_res, back)
 
         # Determine detected sides cleanly
         if side_detected is not None:
@@ -132,7 +127,7 @@ class DataFusion:
         elif back and back.expiry_date:
             data.expiry_date = back.expiry_date
             field_sources["expiry_date"] = (
-                "mrz" if back.mrz and back.card_version != "can_cuoc_2024"
+                "mrz" if back.mrz and back.card_version != CardVersion.CAN_CUOC_2024
                 and back.expiry_date == back.mrz.expiry_date else "back_rules"
             )
 
@@ -209,3 +204,32 @@ class DataFusion:
             validation=validation,
             timings=timings or {},
         )
+
+
+    @staticmethod
+    def resolve_card_version(
+        front: FrontSideResult | None, back: BackSideResult | None,
+    ) -> tuple[CardVersion, bool]:
+        """Abstain on disagreement; one known side can resolve an unknown side."""
+        front_version = front.card_version if front else CardVersion.UNKNOWN
+        back_version = back.card_version if back else CardVersion.UNKNOWN
+        conflict = (
+            front_version != CardVersion.UNKNOWN
+            and back_version != CardVersion.UNKNOWN
+            and front_version != back_version
+        )
+        if conflict:
+            return CardVersion.UNKNOWN, True
+        return (back_version if back_version != CardVersion.UNKNOWN else front_version), False
+
+    @classmethod
+    def fuse(
+        cls,
+        qr: QRResult | None = None,
+        front: FrontSideResult | None = None,
+        back: BackSideResult | None = None,
+        side_detected: list[str] | None = None,
+        timings: dict[str, float] | None = None,
+    ) -> FinalCCCDResult:
+        """Legacy class API; the pipeline uses the injectable instance's merge."""
+        return cls().merge(qr=qr, front=front, back=back, side_detected=side_detected, timings=timings)

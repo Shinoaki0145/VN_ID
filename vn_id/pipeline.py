@@ -14,7 +14,7 @@ from vn_id.core.schemas import (
 )
 from vn_id.aligner import CardAligner, SideClassifier
 from vn_id.ocr import OCREngine
-from vn_id.parser import FrontRuleExtractor, BackRuleExtractor
+from vn_id.parser import CardParserFactory
 from vn_id.qr import QRDecoder
 from vn_id.validator import DataFusion
 
@@ -22,12 +22,17 @@ from vn_id.validator import DataFusion
 class CCCDPipeline:
     """End-to-end pipeline orchestrator for Vietnamese CCCD / ID card extraction."""
 
-    def __init__(self, device: str = "auto"):
+    def __init__(
+        self, device: str = "auto", *,
+        parser_factory: CardParserFactory | None = None,
+        fusion: DataFusion | None = None,
+    ):
         self.device = self._resolve_device(device)
         self.aligner = CardAligner()
         self.qr_decoder = QRDecoder(device=self.device)
         self.ocr_engine = OCREngine(device=self.device, qr_decoder=self.qr_decoder)
-        self.front_extractor = FrontRuleExtractor
+        self.parser_factory = parser_factory if parser_factory is not None else CardParserFactory()
+        self.fusion = fusion if fusion is not None else DataFusion()
 
     @staticmethod
     def _resolve_device(device: str) -> str:
@@ -101,10 +106,10 @@ class CCCDPipeline:
             timings["ocr_ms"] = (time.time() - t_ocr) * 1000.0
 
             t_front = time.time()
-            front_res = self.front_extractor.extract(ocr_res.full_text)
+            front_res = self.parser_factory.parse_front(ocr_res.full_text)
             timings["front_rules_ms"] = (time.time() - t_front) * 1000.0
 
-            fused_result = DataFusion.fuse(
+            fused_result = self.fusion.merge(
                 qr=qr_res,
                 front=front_res,
                 back=None,
@@ -131,10 +136,10 @@ class CCCDPipeline:
             timings["ocr_ms"] = (time.time() - t_ocr) * 1000.0
 
             t_back = time.time()
-            back_res = BackRuleExtractor.extract(ocr_res.full_text, mrz_text=ocr_res.mrz_text)
+            back_res = self.parser_factory.parse_back(ocr_res.full_text, mrz_text=ocr_res.mrz_text)
             timings["back_rules_ms"] = (time.time() - t_back) * 1000.0
 
-            fused_result = DataFusion.fuse(
+            fused_result = self.fusion.merge(
                 qr=qr_res,
                 front=None,
                 back=back_res,
@@ -175,7 +180,7 @@ class CCCDPipeline:
         timings["front_ocr_ms"] = (time.time() - t_ocr_front) * 1000.0
 
         t_front = time.time()
-        front_res = self.front_extractor.extract(ocr_front.full_text)
+        front_res = self.parser_factory.parse_front(ocr_front.full_text)
         timings["front_rules_ms"] = (time.time() - t_front) * 1000.0
 
         # Process back
@@ -200,10 +205,10 @@ class CCCDPipeline:
         timings["back_ocr_ms"] = (time.time() - t_ocr_back) * 1000.0
 
         t_back_rules = time.time()
-        back_res = BackRuleExtractor.extract(ocr_back.full_text, mrz_text=ocr_back.mrz_text)
+        back_res = self.parser_factory.parse_back(ocr_back.full_text, mrz_text=ocr_back.mrz_text)
         timings["back_rules_ms"] = (time.time() - t_back_rules) * 1000.0
 
-        fused_result = DataFusion.fuse(
+        fused_result = self.fusion.merge(
             qr=qr_res,
             front=front_res,
             back=back_res,

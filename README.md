@@ -58,6 +58,23 @@ print(back.validation.warnings)
 
 `process` nhận đường dẫn, bytes hoặc mảng NumPy. `process_both_sides` nhận ảnh trước và sau đúng thứ tự.
 
+### Parser OOP
+
+Có thể dùng parser độc lập với OCR hoặc inject factory/fusion vào pipeline:
+
+```python
+from vn_id import CardVersion, CCCDPipeline
+from vn_id.parser import CardParserFactory
+from vn_id.validator import DataFusion
+
+factory = CardParserFactory()
+parser = factory.get_parser(CardVersion.CAN_CUOC_2024)
+back = parser.parse_back("BỘ CÔNG AN\nNgày, tháng, năm cấp: 18/11/2024")
+pipeline = CCCDPipeline(device="cpu", parser_factory=factory, fusion=DataFusion())
+```
+
+`CCCD2021Parser` và `CanCuoc2024Parser` tách rule mặt sau theo bố cục; rule mặt trước dùng chung để giữ khả năng phục hồi OCR hiện tại. Factory tự nhận diện từng mặt; OCR không đủ dấu hiệu trả `unknown`. Có thể truyền mapping `CardVersion → BaseCardParser` vào constructor của factory để thay strategy mà không đổi pipeline. `DataFusion.merge()` là API instance; `DataFusion.fuse()`, `FrontRuleExtractor.extract()` và `BackRuleExtractor.extract(text, mrz_text)` vẫn tương thích. `card_version` dùng enum với các giá trị chuỗi JSON như trước; giá trị ngoài enum bị từ chối khi tạo schema.
+
 ### API
 
 ```bash
