@@ -376,3 +376,49 @@ def test_origin_crop_can_append_only_without_changing_recognized_text(expanded, 
     engine._recover_front_address_lines(np.zeros((630, 1000, 3), dtype=np.uint8), boxes, recognizer)
 
     assert boxes[1].text == expected
+
+
+def test_front_layout_separates_address_from_merged_expiry_box():
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[292, 528, 768, 577], text='Nơi thường trú I Place ofresidence Tổ 15', confidence=.85),
+        TextBox(bbox=[27, 548, 757, 616], text='Có gianh 2011220 Phú Diễn, Bác Tư Liêm, Hà Nội', confidence=.6),
+        TextBox(bbox=[125, 552, 295, 602], text='22/11/2033', confidence=.85),
+    ]
+    engine._recover_front_layout(
+        np.zeros((630, 1000, 3), dtype=np.uint8), boxes,
+        SimpleNamespace(predict=lambda *args, **kwargs: ('Phú Diễn, Bắc Từ Liêm, Hà Nội', .92)),
+    )
+    assert boxes[1].text == 'Phú Diễn, Bắc Từ Liêm, Hà Nội'
+    assert boxes[1].bbox[0] >= 300
+    assert boxes[2].text == '22/11/2033'
+    text = engine.sorter.sort_boxes(boxes).full_text
+    assert '2011220' not in text
+
+
+def test_front_layout_low_confidence_reread_preserves_boxes():
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[292, 528, 768, 577], text='Nơi thường trú I Place ofresidence Tổ 15', confidence=.85),
+        TextBox(bbox=[27, 548, 757, 616], text='ordinary OCR', confidence=.6),
+    ]
+    original = [b.model_copy(deep=True) for b in boxes]
+    engine._recover_front_layout(np.zeros((630, 1000, 3), dtype=np.uint8), boxes,
+        SimpleNamespace(predict=lambda *args, **kwargs: ('bad crop', .3)))
+    assert boxes == original
+
+
+def test_front_expiry_region_requires_consistent_dates_without_changing_digits():
+    engine = OCREngine()
+    detector = SimpleNamespace(detect=lambda *args, **kwargs: ([[[127, 259, 9, 41]]], [[]]))
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: ('25/0212033', .68))
+    assert engine._recognize_expiry_region(np.zeros((43, 262, 3), dtype=np.uint8), detector, recognizer) == ('25/02/2033', .68)
+
+
+@pytest.mark.parametrize('second,prob', [('25/0212003', .7), ('25/0212033', .3)])
+def test_front_expiry_region_rejects_disagreement_or_low_confidence(second, prob):
+    engine = OCREngine()
+    detector = SimpleNamespace(detect=lambda *args, **kwargs: ([[[127, 259, 9, 41]]], [[]]))
+    answers = iter([('25/0212033', .68), (second, prob)])
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: next(answers))
+    assert engine._recognize_expiry_region(np.zeros((43, 262, 3), dtype=np.uint8), detector, recognizer) is None

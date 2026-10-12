@@ -1,0 +1,78 @@
+{
+  "success": true,
+  "card_version": "can_cuoc_cong_dan_2021",
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "901000008798",
+    "cmnd_old": null,
+    "name": "SOCULISTREPULLIC TIET NAM",
+    "dob": "05/03/2003",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "Đông Yên, An Biên, Kiên Giang",
+    "residence": "Pisco o naidence Cái Nước Ngọn, Đông Yên, An Biên, Kiên Giang",
+    "issue_date": "01/03/2023",
+    "expiry_date": "25/12/2035",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "front_rules",
+    "name": "front_rules",
+    "dob": "front_rules",
+    "gender": "front_rules",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "front_rules",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "mrz"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": false,
+    "gender_century_valid": false,
+    "birth_year_valid": false,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": true
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "personal_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": null
+    },
+    "warnings": [
+      "Mã tỉnh '901' không tồn tại trong danh mục 63 tỉnh thành BCA",
+      "Chữ số thứ 4 (0) không khớp với giới tính 'Nam' và thế kỷ sinh (2000)",
+      "2 chữ số năm sinh (00) không khớp với năm sinh (2003)",
+      "MRZ id: 091075007888 differs from front_rules value 901000008798.",
+      "MRZ dob: 25/12/1975 differs from front_rules value 05/03/2003."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 4.567146301269531,
+    "qr_ms": 682.7683448791504,
+    "front_ocr_det_ms": 497.57981300354004,
+    "front_ocr_rec_ms": 766.0574913024902,
+    "front_ocr_sort_ms": 0.2989768981933594,
+    "front_ocr_ms": 1263.9808654785156,
+    "front_rules_ms": 1.0190010070800781,
+    "back_align_ms": 12.488126754760742,
+    "back_ocr_det_ms": 395.09034156799316,
+    "back_ocr_rec_ms": 842.3309326171875,
+    "back_ocr_sort_ms": 0.29158592224121094,
+    "back_ocr_ms": 1237.7986907958984,
+    "back_rules_ms": 0.492095947265625,
+    "fusion_ms": 0.12040138244628906,
+    "total_ms": 3217.825412750244
+  }
+}

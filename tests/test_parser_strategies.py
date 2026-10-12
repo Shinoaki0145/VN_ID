@@ -145,3 +145,11 @@ def test_instance_fusion_preserves_conflicts_and_source_priorities():
     assert result.field_sources['expiry_date'] == 'front_rules'
     assert any('card_version' in warning for warning in result.validation.warnings)
     assert result == DataFusion.fuse(front=front, back=back, qr=qr)
+
+
+def test_front_tolerance_does_not_change_back_address_parsing():
+    from vn_id.parser.strategies.can_cuoc_2024 import CanCuoc2024Parser
+    parser = CanCuoc2024Parser()
+    result = parser.parse_back('Nơi cư trú Phace no\nNgày, tháng, năm hết hạn: 22/11/2033')
+    assert result.residence == 'Phace no'
+    assert parser.parse_back('Quố quân I Place d Vonym').origin is None

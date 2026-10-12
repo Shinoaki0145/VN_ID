@@ -174,6 +174,12 @@ def test_cccd_front_ocr_preserves_origin_comma(real_pipeline):
     assert result.data.origin == front.origin
 
 
+def test_front_cu_8_pipeline_reads_origin_on_blue_fabric(real_pipeline):
+    result = real_pipeline.process(real_image_path("front_cu_8.jpg"), force_side=CardSide.FRONT)
+    assert result.data.origin == "Phù Cát, Bình Định"
+    assert result.field_sources["origin"] == "front_rules"
+
+
 def test_front_cu_original_reads_identity_and_expiry_without_qr(real_pipeline, monkeypatch):
     monkeypatch.setattr(
         real_pipeline.ocr_engine, "qr_decoder",
@@ -268,3 +274,40 @@ def test_real_user_back_side_data_fusion():
     assert final.data.issue_date == "24/06/2021"
     assert final.data.issue_loc == "Cục Cảnh sát Quản lý hành chính về trật tự xã hội"
     assert "back" in final.side_detected
+
+
+@pytest.mark.parametrize('name,id_num,person,origin,residence,expiry', [
+    ('front_cu_10.png', '091203008798', 'PHÙNG THÀNH LUÂN',
+     'Đông Yên, An Biên, Kiên Giang', 'Cái Nước Ngọn, Đông Yên, An Biên, Kiên Giang', '05/03/2028'),
+    ('front_cu_11.png', '042308000028', 'NGUYỄN ANH THƯ',
+     'Sơn Kim 2, Hương Sơn, Hà Tĩnh', 'Tổ 15, Phú Diễn, Bắc Từ Liêm, Hà Nội', '22/11/2033'),
+])
+def test_front_9_to_11_ocr_only(ocr_only_engine, name, id_num, person, origin, residence, expiry):
+    image = CCCDPipeline.load_image(real_image_path(name))
+    ocr = ocr_only_engine.recognize(CardAligner().align(image).aligned_image, is_front=True)
+    front = FrontRuleExtractor.extract(ocr.full_text)
+    assert (front.id, front.name, front.origin, front.residence, front.expiry_date) == (
+        id_num, person, origin, residence, expiry,
+    )
+    assert front.dob == {'front_cu_10.png': '05/03/2003', 'front_cu_11.png': '22/11/2008'}[name]
+
+
+def test_front_cu_9_ocr_only_recovers_identity_address_content_and_expiry(ocr_only_engine):
+    from vn_id.core.utils import remove_accents
+
+    image = CCCDPipeline.load_image(real_image_path('front_cu_9.png'))
+    front = FrontRuleExtractor.extract(ocr_only_engine.recognize(CardAligner().align(image).aligned_image).full_text)
+    assert (front.id, front.name, front.dob, front.expiry_date) == (
+        '075093017969', 'LÊ HỮU LONG', '25/02/1993', '25/02/2033',
+    )
+    assert remove_accents(front.origin) == 'Binh Phu, Thang Binh, Quang Nam'
+    assert remove_accents(front.residence) == 'To 11, Ap 01, La Nga, Dinh Quan, Dong Nai'
+
+
+@pytest.mark.xfail(strict=True, reason='368x240 source: VietOCR still reads Bịnh and Ap instead of Bình and Ấp; no hardcoded corrections')
+def test_front_cu_9_exact_address_accents(ocr_only_engine):
+    image = CCCDPipeline.load_image(real_image_path('front_cu_9.png'))
+    front = FrontRuleExtractor.extract(ocr_only_engine.recognize(CardAligner().align(image).aligned_image).full_text)
+    assert (front.origin, front.residence) == (
+        'Bình Phú, Thăng Bình, Quảng Nam', 'Tổ 11, Ấp 01, La Ngà, Định Quán, Đồng Nai',
+    )

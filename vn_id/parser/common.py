@@ -25,6 +25,10 @@ ORIGIN_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+FRONT_ORIGIN_PATTERN = re.compile(
+    ORIGIN_PATTERN.pattern + r"|^[^\w]*QUO\s*QUAN[:\s/;-]*", re.IGNORECASE,
+)
+
 HEADER_EXCLUSIONS_FRONT = [
     "CONG HOA",
     "XA HOI",
@@ -40,6 +44,10 @@ HEADER_EXCLUSIONS_FRONT = [
     "IDENTITY",
     "CARD",
     "CITIZEN",
+    "SOCIAL",
+    "REPUB",
+    "NGAY SINH",
+    "DATE OF BIRTH",
     "SO / NO",
     "SO DINH DANH",
     "GIOI TINH",
@@ -91,8 +99,22 @@ def clean_address_value(val: str) -> str:
     return val.strip(" :-,;/")
 
 
+def clean_front_address_value(val: str) -> str:
+    val = clean_address_value(val)
+    return re.sub(r"^(?:[IJj]?\s*)?P[LH]ACE\s+(?:OF?\s+ORG+IN|NO\b)[:\s/;-]*", "", val, flags=re.IGNORECASE).strip(" :-,;/")
+
+
+def is_front_field_header(val: str) -> bool:
+    clean = remove_accents(val).upper()
+    return any(clean.startswith(header) for header in HEADER_EXCLUSIONS_ADDR) or bool(
+        RESIDENCE_PATTERN.search(clean) or FRONT_ORIGIN_PATTERN.search(clean)
+        or re.match(r"^[IJ/ ]*PLACE\b", clean) or re.fullmatch(DATE_PATTERN, clean)
+    )
+
+
 def extract_front_raw(text: str) -> dict[str, str]:
     results: dict[str, str] = {}
+    has_origin_label = False
     if not text:
         return results
 
@@ -116,8 +138,30 @@ def extract_front_raw(text: str) -> dict[str, str]:
             y = y_raw.replace("c", "0").replace("C", "0").replace("o", "0").replace("O", "0")
             results["dob"] = normalize_date(d, m, y)
 
+    # Prefer the labelled identity region to uppercase text in the header.
+    name_lines = lines
+    name_pattern = (
+        r"(?:HO\s*(?:,\s*CHU\s*DEM\s*)?(?:VA\s*)?TEN(?:\s*KHAI\s*SINH)?"
+        r"(?:\s*[/I|]?\s*FULL\s*NAM[EO]?)?|FULL\s*NAM[EO]?)[:\s/|;-]*"
+    )
+    for i, line in enumerate(lines):
+        label = re.search(name_pattern, remove_accents(line).upper())
+        if label:
+            name_lines = []
+            for candidate_line in lines[i:]:
+                candidate_label = re.search(name_pattern, remove_accents(candidate_line).upper())
+                value = candidate_line[candidate_label.end():].strip() if candidate_label else candidate_line
+                if not value:
+                    continue
+                next_field = re.search(
+                    r"\b(?:NGAY(?:,\s*THANG,\s*NAM)?\s*SINH|DATE\s*OF\s*BIRTH|GIOI\s*TINH|SEX|QUOC\s*TICH|NATIONALITY)",
+                    remove_accents(value).upper(),
+                )
+                name_lines = [value[:next_field.start()].strip() if next_field else value]
+                break
+            break
     # 3. Extract Name candidate
-    for line in lines:
+    for line in name_lines:
         clean_l = remove_accents(line).upper()
         if any(h in clean_l for h in HEADER_EXCLUSIONS_FRONT):
             continue
@@ -140,7 +184,7 @@ def extract_front_raw(text: str) -> dict[str, str]:
         if "residence" not in results:
             m_res = RESIDENCE_PATTERN.search(clean_l)
             if m_res:
-                val = clean_address_value(line[m_res.end():])
+                val = clean_front_address_value(line[m_res.end():])
                 clean_val = remove_accents(val).upper().strip(" 0123456789/:-_;,.")
                 next_line_idx = i + 1
                 if (not val or "RESIDENC" in clean_val) and next_line_idx < len(lines):
@@ -153,7 +197,7 @@ def extract_front_raw(text: str) -> dict[str, str]:
                         sep = ", " if not val.endswith(",") else " "
                         val = f"{val}{sep}{next_l}"
                         next_line_idx += 1
-                if val:
+                if val and not is_front_field_header(val):
                     results["residence"] = val.strip(" /:-_;,")
 
             elif "NOI CU TRU" in clean_l or "NOI THUONG TRU" in clean_l:
@@ -168,7 +212,7 @@ def extract_front_raw(text: str) -> dict[str, str]:
                             break
                     else:
                         val = ""
-                val = clean_address_value(val)
+                val = clean_front_address_value(val)
                 clean_val = remove_accents(val).upper().strip(" 0123456789/:-_;,.")
                 next_line_idx = i + 1
                 if (not val or "RESIDENC" in clean_val) and next_line_idx < len(lines):
@@ -180,20 +224,22 @@ def extract_front_raw(text: str) -> dict[str, str]:
                     if not any(h in clean_next for h in HEADER_EXCLUSIONS_ADDR) and len(next_l) > 3:
                         sep = ", " if not val.endswith(",") else " "
                         val = f"{val}{sep}{next_l}"
-                if val:
+                if val and not is_front_field_header(val):
                     results["residence"] = val.strip(" /:-_;,")
 
         # Origin / Nơi ĐKKS / Quê quán
         if "origin" not in results:
-            m_orig = ORIGIN_PATTERN.search(clean_l)
+            m_orig = FRONT_ORIGIN_PATTERN.search(clean_l)
             if m_orig:
-                val = clean_address_value(line[m_orig.end():])
+                has_origin_label = True
+                val = clean_front_address_value(line[m_orig.end():])
                 clean_val = remove_accents(val).upper().strip(" 0123456789/:-_;,.")
-                if (not val or "ORIGIN" in clean_val or "BIRTH" in clean_val) and i + 1 < len(lines):
-                    val = lines[i + 1].strip()
-                if val:
+                if not val or "ORIGIN" in clean_val or "BIRTH" in clean_val or re.match(r"^[IJ/ ]*PLACE\b", clean_val):
+                    val = lines[i + 1].strip() if i + 1 < len(lines) else ""
+                if val and not is_front_field_header(val):
                     results["origin"] = val.strip(" /:-_;,")
             elif "NOI DANG KY KHAI SINH" in clean_l or "QUE QUAN" in clean_l or "NOI DKKS" in clean_l:
+                has_origin_label = True
                 colon_idx = line.find(":")
                 if colon_idx != -1:
                     val = line[colon_idx + 1:].strip()
@@ -205,11 +251,11 @@ def extract_front_raw(text: str) -> dict[str, str]:
                             break
                     else:
                         val = ""
-                val = clean_address_value(val)
+                val = clean_front_address_value(val)
                 clean_val = remove_accents(val).upper().strip(" 0123456789/:-_;,.")
-                if (not val or "ORIGIN" in clean_val or "BIRTH" in clean_val) and i + 1 < len(lines):
-                    val = lines[i + 1].strip()
-                if val:
+                if not val or "ORIGIN" in clean_val or "BIRTH" in clean_val:
+                    val = lines[i + 1].strip() if i + 1 < len(lines) else ""
+                if val and not is_front_field_header(val):
                     results["origin"] = val.strip(" /:-_;,")
 
     # 5. Extract Expiry Date / Có giá trị đến
@@ -246,7 +292,7 @@ def extract_front_raw(text: str) -> dict[str, str]:
                 break
 
     # 6. A province without a residence label cannot identify a residence.
-    if "origin" not in results:
+    if "origin" not in results and not has_origin_label:
         found_locs: list[str] = []
         for line in lines:
             clean_l = remove_accents(line).upper()

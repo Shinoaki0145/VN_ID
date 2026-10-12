@@ -33,6 +33,28 @@ def test_card_aligner_blank_image_keeps_resize_fallback():
     assert result.aligned_image.shape == (630, 1000, 3)
 
 
+def test_card_aligner_excludes_blue_fabric_from_front_cu_8():
+    path = Path(__file__).resolve().parents[1] / "image" / "front_cu_8.jpg"
+    if not path.is_file():
+        pytest.skip("Real image fixture missing: front_cu_8.jpg")
+    result = CardAligner().align(cv2.imread(str(path)))
+    assert result.is_aligned
+    # Approximate visible card corners, allowing for the rounded border.
+    expected = [(57, 68), (700, 76), (705, 500), (35, 477)]
+    assert np.allclose(result.corners, expected, atol=25)
+
+
+def test_card_aligner_keeps_both_halves_of_back_cu_18():
+    path = Path(__file__).resolve().parents[1] / "image" / "back_cu_18.jpg"
+    if not path.is_file():
+        pytest.skip("Real image fixture missing: back_cu_18.jpg")
+    result = CardAligner().align(cv2.imread(str(path)))
+    assert result.is_aligned
+    polygon = np.array(result.corners, dtype=np.float32)
+    for point in [(550, 350), (1150, 350)]:
+        assert cv2.pointPolygonTest(polygon, point, False) >= 0
+
+
 @pytest.mark.parametrize("name,date_point", [
     ("back_cu_15.jpg", (350, 75)), ("back_cu_17.jpg", (500, 205)),
 ])
