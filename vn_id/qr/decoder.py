@@ -16,34 +16,6 @@ class QRDecoder:
         self.device = str(device).lower()
         self._qreader = None
 
-    # def _get_qreader(self):
-    #     if self._qreader is None:
-    #         import os
-    #         import logging
-    #         import warnings
-    #         if "YOLO_CONFIG_DIR" not in os.environ:
-    #             os.environ["YOLO_CONFIG_DIR"] = "/tmp/Ultralytics"
-    #         try:
-    #             from ultralytics.utils import LOGGER
-    #             LOGGER.setLevel(logging.ERROR)
-    #         except Exception:
-    #             pass
-    #         from qreader import QReader
-
-    #         weights_arg = str(QR_WEIGHTS_DIR) if QR_WEIGHTS_DIR.is_dir() else None
-
-    #         with warnings.catch_warnings():
-    #             warnings.filterwarnings("ignore")
-    #             self._qreader = QReader(weights_folder=weights_arg, reencode_to=None)
-    #             if self.device == "cuda":
-    #                 try:
-    #                     import torch
-    #                     if torch.cuda.is_available():
-    #                         self._qreader.detector.model.to("cuda")
-    #                 except Exception:
-    #                     pass
-    #     return self._qreader
-
     def _get_qreader(self):
         if self._qreader is None:
             import os

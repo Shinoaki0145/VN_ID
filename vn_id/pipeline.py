@@ -4,14 +4,7 @@ from typing import Any
 import cv2
 import numpy as np
 
-from vn_id.core.schemas import (
-    CardSide,
-    FinalCCCDResult,
-    AlignedCardResult,
-    QRResult,
-    NERResult,
-    BackSideResult,
-)
+from vn_id.core.schemas import CardSide, FinalCCCDResult
 from vn_id.aligner import CardAligner, SideClassifier
 from vn_id.ocr import OCREngine
 from vn_id.parser import CardParserFactory
