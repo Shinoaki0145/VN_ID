@@ -12,7 +12,7 @@ from vn_id.core.schemas import (
     CCCDData,
     FinalCCCDResult,
 )
-from vn_id.core.constants import PROVINCE_CODES, GENDER_CENTURY_MAP
+from vn_id.core.constants import PROVINCE_CODES, CENTURY_GENDER_TO_INFO
 
 __all__ = [
     "CardSide",
@@ -27,6 +27,6 @@ __all__ = [
     "CCCDData",
     "FinalCCCDResult",
     "PROVINCE_CODES",
-    "GENDER_CENTURY_MAP",
+    "CENTURY_GENDER_TO_INFO",
 ]
 
