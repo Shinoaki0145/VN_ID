@@ -422,3 +422,40 @@ def test_front_expiry_region_rejects_disagreement_or_low_confidence(second, prob
     answers = iter([('25/0212033', .68), (second, prob)])
     recognizer = SimpleNamespace(predict=lambda *args, **kwargs: next(answers))
     assert engine._recognize_expiry_region(np.zeros((43, 262, 3), dtype=np.uint8), detector, recognizer) is None
+
+
+@pytest.mark.parametrize('title,side', [
+    ('CĂN CƯỚC CÔNG', True),
+    ('CĂN CƯỚC CÔNG DÂN', True),
+    ('CĂN CƯỚC', True),
+    ('CĂN CƯỚC CÔNG', False),
+])
+def test_front_recovery_handles_truncated_2021_title_without_affecting_2024_or_back(title, side):
+    from vn_id.parser.front import FrontRuleExtractor
+
+    image = np.zeros((630, 1000, 3), dtype=np.uint8)
+    bounds = [[271, 659, 148, 200], [387, 948, 414, 465], [268, 908, 523, 585], [268, 742, 563, 616], [125, 259, 561, 594]]
+    initial = iter([
+        (title, .881),
+        ('Sex Nam Quốc tịch/Nationally Việt Nam', .815),
+        ('Noi thường trú/ Pisco o naidence Cái Nước Ngọn', .636),
+        ('Đông Yên, An Biên, Kiên Giang', .895),
+        ('05/03/2028', .905),
+    ])
+    def predict(crop, **kwargs):
+        try:
+            return next(initial)
+        except StopIteration:
+            return 'Nơi thường trú / Place of residence Cái Nước Ngọn', .85
+
+    engine = OCREngine(qr_decoder=SimpleNamespace(mask_qr_regions=lambda image:image))
+    engine._detector = SimpleNamespace(detect=lambda *args, **kwargs: ([bounds], [[]]))
+    engine._recognizer = SimpleNamespace(predict=predict)
+    ocr = engine.recognize(image, is_front=side)
+    front = FrontRuleExtractor.extract(ocr.full_text)
+    if side and title.startswith('CĂN CƯỚC CÔNG'):
+        assert front.residence == 'Cái Nước Ngọn, Đông Yên, An Biên, Kiên Giang'
+        assert front.expiry_date == '05/03/2028'
+    else:
+        assert 'Pisco o naidence' in ocr.full_text
+        assert 'Có giá trị đến:' not in ocr.full_text

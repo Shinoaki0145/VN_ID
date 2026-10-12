@@ -311,3 +311,26 @@ def test_front_cu_9_exact_address_accents(ocr_only_engine):
     assert (front.origin, front.residence) == (
         'Bình Phú, Thăng Bình, Quảng Nam', 'Tổ 11, Ấp 01, La Ngà, Định Quán, Đồng Nai',
     )
+
+
+def test_front_cu_10_recovers_fields_when_detector_clips_title_on_colab(ocr_only_engine):
+    image = CCCDPipeline.load_image(real_image_path('front_cu_10.png'))
+    image = CardAligner().align(image).aligned_image
+    detector = ocr_only_engine._get_detector()
+    detect = detector.detect
+
+    def colab_boxes(image, **kwargs):
+        horizontal, free = detect(image, **kwargs)
+        if image.shape[:2] == (630, 1000):
+            for box in horizontal[0]:
+                if 140 <= box[2] <= 160 and 260 <= box[0] <= 285:
+                    # Exact large-title crop from the user's CUDA log.
+                    box[:] = [271, 659, 148, 200]
+        return horizontal, free
+
+    ocr_only_engine._detector = SimpleNamespace(detect=colab_boxes)
+    ocr = ocr_only_engine.recognize(image, is_front=True)
+    assert 'CĂN CƯỚC CÔNG\n' in ocr.full_text
+    front = FrontRuleExtractor.extract(ocr.full_text)
+    assert front.residence == 'Cái Nước Ngọn, Đông Yên, An Biên, Kiên Giang'
+    assert front.expiry_date == '05/03/2028'

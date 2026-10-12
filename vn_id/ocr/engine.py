@@ -372,6 +372,10 @@ class OCREngine:
 
             if is_front:
                 visible_text = remove_accents(" ".join(box.text for box in boxes)).upper()
+                # DBNet can clip the final word of the large title (e.g. CUDA
+                # reads "CAN CUOC CONG"). "CONG" still distinguishes this
+                # layout from the 2024 "CAN CUOC" title.
+                has_cccd_title = bool(re.search(r"\bCAN\s+CUOC\s+CONG\b", visible_text))
                 expiry_boxes = [
                     box for box in boxes
                     if box.bbox[2] <= 0.35 * w and box.bbox[1] >= 0.82 * h
@@ -386,7 +390,7 @@ class OCREngine:
                     and re.search(r"(?<!\d)\d{1,2}[/.-]\d{1,2}[/.-]\d{4}(?!\d)", box.text)
                     for box in expiry_boxes
                 )
-                if "CAN CUOC CONG DAN" in visible_text:
+                if has_cccd_title:
                     for box in expiry_boxes:
                         match = re.fullmatch(r"(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})", box.text)
                         if match and box.confidence >= 0.8:
@@ -410,7 +414,7 @@ class OCREngine:
                                     break
                             except Exception as error:
                                 logger.warning("Expiry region reread unavailable; keeping ordinary OCR: %s", error)
-                if "CAN CUOC CONG DAN" in visible_text and has_expiry_label and not has_clear_date:
+                if has_cccd_title and has_expiry_label and not has_clear_date:
                     try:
                         x1, x2 = round(0.125 * w), round(0.295 * w)
                         y1, y2 = round(0.876 * h), round(0.956 * h)
@@ -460,7 +464,7 @@ class OCREngine:
             if is_front and boxes:
                 original_boxes = [box.model_copy(deep=True) for box in boxes]
                 try:
-                    if "CAN CUOC CONG DAN" in remove_accents(" ".join(box.text for box in boxes)).upper():
+                    if has_cccd_title:
                         self._recover_front_layout(image, boxes, recognizer)
                     self._recover_front_address_lines(image, boxes, recognizer)
                 except Exception as error:
