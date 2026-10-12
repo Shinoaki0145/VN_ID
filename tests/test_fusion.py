@@ -6,7 +6,7 @@ def test_fusion_qr_priority_over_ocr():
     qr = QRResult(
         is_detected=True,
         id="001098012345",
-        name="NGUYỄN VĂN A",
+        name="Nguyễn Văn A",
         dob="15/08/1998",
         gender="Nam",
         address="Số 1 Đại Cồ Việt, Hai Bà Trưng, Hà Nội"
@@ -43,7 +43,7 @@ def test_fusion_no_qr_uses_front_rules():
     qr = QRResult(is_detected=False)
     front = FrontSideResult(
         id="001098012345",
-        name="NGUYỄN VĂN B",
+        name="Nguyễn Văn B",
         dob="15/08/1998",
         gender="Nam",
         origin="Hà Nội",
@@ -85,7 +85,7 @@ def test_fusion_2024_card_back_address_and_qr():
     assert final.success
     assert final.data.id == "054200009740"
     assert final.data.cmnd_old == "221472077"
-    assert final.data.name == "Nguyễn Trần Phương Duy"
+    assert final.data.name == "NGUYỄN TRẦN PHƯƠNG DUY"
     assert final.data.residence == "Khu Phố An Thạnh, Xuân Đài, Sông Cầu, Phú Yên"
     assert final.data.origin == "Xuân Đài, Sông Cầu, Phú Yên"
     assert final.field_sources["origin"] == "back_rules"

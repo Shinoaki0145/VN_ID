@@ -1,0 +1,73 @@
+{
+  "success": true,
+  "card_version": "can_cuoc_cong_dan_2021",
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "077200011327",
+    "cmnd_old": null,
+    "name": "DƯƠNG TOÀN THẮNG",
+    "dob": "30/04/2000",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": null,
+    "residence": null,
+    "issue_date": "25/10/2022",
+    "expiry_date": "30/08/2034",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "front_rules",
+    "name": "front_rules",
+    "dob": "front_rules",
+    "gender": "front_rules",
+    "nationality": "default",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "mrz"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": false
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": true
+    },
+    "warnings": [
+      "MRZ id: 062194002092 differs from front_rules value 077200011327.",
+      "MRZ dob: 30/08/1994 differs from front_rules value 30/04/2000.",
+      "MRZ gender: Nữ differs from front_rules value Nam."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 0.8437633514404297,
+    "qr_ms": 821.528434753418,
+    "front_ocr_det_ms": 2911.5278720855713,
+    "front_ocr_rec_ms": 316.2271976470947,
+    "front_ocr_sort_ms": 0.07033348083496094,
+    "front_ocr_ms": 3227.84423828125,
+    "front_rules_ms": 0.5788803100585938,
+    "back_align_ms": 5.234479904174805,
+    "back_ocr_det_ms": 2935.0407123565674,
+    "back_ocr_rec_ms": 1612.3428344726562,
+    "back_ocr_sort_ms": 0.10347366333007812,
+    "back_ocr_ms": 4547.535181045532,
+    "back_rules_ms": 0.21505355834960938,
+    "fusion_ms": 0.04029273986816406,
+    "total_ms": 8617.65193939209
+  }
+}

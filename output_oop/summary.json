@@ -1,0 +1,140 @@
+{
+  "device": "cpu",
+  "skipped_pairs": [
+    3
+  ],
+  "cases": [
+    {
+      "name": "front_cu_1_crop_back_cu_1",
+      "front_image": "image/front_cu_1_crop.jpg",
+      "back_image": "image/back_cu_1.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/front_cu_1_crop_back_cu_1.json",
+      "warning_count": 4,
+      "elapsed_seconds": 10.208
+    },
+    {
+      "name": "front_cu_2_back_cu_2",
+      "front_image": "image/front_cu_2.png",
+      "back_image": "image/back_cu_2.png",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/front_cu_2_back_cu_2.json",
+      "warning_count": 3,
+      "elapsed_seconds": 8.618
+    },
+    {
+      "name": "front_cu_4_back_cu_4",
+      "front_image": "image/front_cu_4.jpg",
+      "back_image": "image/back_cu_4.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/front_cu_4_back_cu_4.json",
+      "warning_count": 3,
+      "elapsed_seconds": 7.966
+    },
+    {
+      "name": "front_cu_5_back_cu_5",
+      "front_image": "image/front_cu_5.jpg",
+      "back_image": "image/back_cu_5.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/front_cu_5_back_cu_5.json",
+      "warning_count": 4,
+      "elapsed_seconds": 11.165
+    },
+    {
+      "name": "front_cu_6_back_cu_6",
+      "front_image": "image/front_cu_6.jpg",
+      "back_image": "image/back_cu_6.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/front_cu_6_back_cu_6.json",
+      "warning_count": 3,
+      "elapsed_seconds": 7.918
+    },
+    {
+      "name": "front_cu_7_back_cu_7",
+      "front_image": "image/front_cu_7.jpg",
+      "back_image": "image/back_cu_7.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/front_cu_7_back_cu_7.json",
+      "warning_count": 3,
+      "elapsed_seconds": 8.06
+    },
+    {
+      "name": "front_moi_1_back_moi_1",
+      "front_image": "image/front_moi_1.jpg",
+      "back_image": "image/back_moi_1.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_2024",
+      "output": "output_oop/front_moi_1_back_moi_1.json",
+      "warning_count": 0,
+      "elapsed_seconds": 6.575
+    },
+    {
+      "name": "back_cu_10",
+      "front_image": null,
+      "back_image": "image/back_cu_10.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/back_cu_10.json",
+      "warning_count": 0,
+      "elapsed_seconds": 4.542
+    },
+    {
+      "name": "back_cu_11",
+      "front_image": null,
+      "back_image": "image/back_cu_11.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/back_cu_11.json",
+      "warning_count": 0,
+      "elapsed_seconds": 4.537
+    },
+    {
+      "name": "back_cu_12",
+      "front_image": null,
+      "back_image": "image/back_cu_12.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/back_cu_12.json",
+      "warning_count": 0,
+      "elapsed_seconds": 4.627
+    },
+    {
+      "name": "back_cu_13",
+      "front_image": null,
+      "back_image": "image/back_cu_13.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/back_cu_13.json",
+      "warning_count": 0,
+      "elapsed_seconds": 4.727
+    },
+    {
+      "name": "back_cu_14",
+      "front_image": null,
+      "back_image": "image/back_cu_14.jpg",
+      "status": "completed",
+      "success": true,
+      "card_version": "can_cuoc_cong_dan_2021",
+      "output": "output_oop/back_cu_14.json",
+      "warning_count": 0,
+      "elapsed_seconds": 4.573
+    }
+  ]
+}

@@ -145,7 +145,7 @@ def test_can_cuoc_2024_both_sides_origin(real_pipeline):
     assert result.data.origin == "Phường 7, Quận 8, TP. Hồ Chí Minh"
     assert result.field_sources["origin"] == "back_rules"
     assert result.data.id == "079183034888"
-    assert result.data.name == "Huỳnh Thị Thanh Hiền"
+    assert result.data.name == "HUỲNH THỊ THANH HIỀN"
     assert result.data.issue_date == "18/11/2024"
     assert result.data.expiry_date == "14/09/2043"
 

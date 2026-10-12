@@ -1,0 +1,77 @@
+{
+  "success": true,
+  "card_version": "can_cuoc_cong_dan_2021",
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "040098020586",
+    "cmnd_old": null,
+    "name": "LÊ VĂN HOÀNG",
+    "dob": "19/03/1998",
+    "gender": "Nam",
+    "nationality": "Việt Nam",
+    "origin": "Xuân Thành, Yên Thành, Nghệ An",
+    "residence": "Bắc Phượng Sơn, Xuân Thành, Yên Thành, Nghệ An",
+    "issue_date": "20/08/2021",
+    "expiry_date": "19/03/2038",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "front_rules",
+    "name": "front_rules",
+    "dob": "front_rules",
+    "gender": "front_rules",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "front_rules",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "front_rules"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": false,
+      "expiry_date": false
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": null
+    },
+    "warnings": [
+      "MRZ id: 010301004673 differs from front_rules value 040098020586.",
+      "MRZ dob: 19/03/2001 differs from front_rules value 19/03/1998.",
+      "MRZ gender: Nữ differs from front_rules value Nam.",
+      "MRZ expiry_date: 19/03/2026 differs from front_rules value 19/03/2038."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 6.753444671630859,
+    "qr_ms": 1284.346580505371,
+    "front_ocr_det_ms": 2952.6472091674805,
+    "front_ocr_rec_ms": 510.85472106933594,
+    "front_ocr_sort_ms": 0.11920928955078125,
+    "front_ocr_ms": 4380.748271942139,
+    "front_rules_ms": 0.9710788726806641,
+    "back_align_ms": 6.922006607055664,
+    "back_ocr_det_ms": 2889.889717102051,
+    "back_ocr_rec_ms": 1631.3226222991943,
+    "back_ocr_sort_ms": 0.08440017700195312,
+    "back_ocr_ms": 4521.344184875488,
+    "back_rules_ms": 0.5738735198974609,
+    "fusion_ms": 0.19478797912597656,
+    "total_ms": 10206.177711486816
+  }
+}

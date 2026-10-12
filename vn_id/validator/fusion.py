@@ -66,6 +66,9 @@ class DataFusion:
             data.name = front_res.name
             field_sources["name"] = "front_rules"
 
+        if data.name is not None:
+            data.name = data.name.upper()
+
         # DOB: Priority QR > Front
         if qr and qr.is_detected and qr.dob:
             data.dob = qr.dob

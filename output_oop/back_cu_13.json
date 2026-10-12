@@ -1,0 +1,57 @@
+{
+  "success": true,
+  "card_version": "can_cuoc_cong_dan_2021",
+  "side_detected": [
+    "back"
+  ],
+  "data": {
+    "id": "079193034890",
+    "cmnd_old": null,
+    "name": null,
+    "dob": "23/09/1993",
+    "gender": "Nữ",
+    "nationality": "Việt Nam",
+    "origin": null,
+    "residence": null,
+    "issue_date": "22/09/2022",
+    "expiry_date": "23/09/2033",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "nationality": "default",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "mrz",
+    "id": "mrz",
+    "dob": "mrz",
+    "gender": "mrz"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {},
+    "mrz_checksums": {
+      "document_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": true
+    },
+    "warnings": []
+  },
+  "timings": {
+    "align_ms": 5.831718444824219,
+    "qr_ms": 83.34684371948242,
+    "ocr_det_ms": 2914.8213863372803,
+    "ocr_rec_ms": 1686.349868774414,
+    "ocr_sort_ms": 0.1087188720703125,
+    "ocr_ms": 4601.3219356536865,
+    "back_rules_ms": 0.20956993103027344,
+    "fusion_ms": 0.0286102294921875,
+    "total_ms": 4726.9322872161865
+  }
+}

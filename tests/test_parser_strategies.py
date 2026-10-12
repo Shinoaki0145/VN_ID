@@ -111,7 +111,7 @@ def test_pipeline_uses_injected_strategies_for_single_and_both_sides(monkeypatch
     for result in (front, back, both):
         assert result.data.nationality == 'Injected Nationality'
         assert result.card_version == 'can_cuoc_2024'
-    assert front.data.name == both.data.name == 'Injected Name'
+    assert front.data.name == both.data.name == 'INJECTED NAME'
     assert back.data.issue_loc == both.data.issue_loc == 'Injected Issuer'
     assert factory.parse_back('BỘ CÔNG AN', mrz_text='separate MRZ crop').mrz_raw == 'separate MRZ crop'
 
