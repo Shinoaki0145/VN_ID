@@ -61,8 +61,8 @@ class CardAligner:
             for contour in contours if cv2.contourArea(contour) > 0.12 * image_area
         ]
 
-        # Pale cyan/green security background can locate edges that blend into
-        # the photograph. A red stamp may split the mask into large components.
+        # Keep individual regions as candidates as well as the combined hull:
+        # portraits/stamps can split a card, while scenery can enlarge its hull.
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, (50, 12, 60), (130, 255, 255))
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((15, 15), np.uint8))
@@ -71,7 +71,23 @@ class CardAligner:
         if large:
             hull = cv2.convexHull(np.concatenate(large))
             candidates.append(cv2.approxPolyDP(hull, 0.025 * cv2.arcLength(hull, True), True))
+        # A low-saturation mask also covers the portrait and pale printed areas.
+        # Opening removes thin connections to patterned scenery before closing.
+        pale = cv2.inRange(hsv, (0, 0, 100), (179, 140, 255))
+        kernel_size = max(3, round(min(image.shape[:2]) * 0.04))
+        pale = cv2.morphologyEx(pale, cv2.MORPH_OPEN, np.ones((kernel_size, kernel_size), np.uint8))
+        pale = cv2.morphologyEx(pale, cv2.MORPH_CLOSE, np.ones((25, 25), np.uint8))
+        pale_contours, _ = cv2.findContours(pale, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        large.extend(contour for contour in pale_contours if cv2.contourArea(contour) > 0.12 * image_area)
+        for contour in large:
+            hull = cv2.convexHull(contour)
+            candidates.append(cv2.approxPolyDP(hull, 0.025 * cv2.arcLength(hull, True), True))
 
+        # Suppress fabric texture before scoring visible border support.
+        # Weight by area so a fingerprint region cannot outrank the whole card.
+        border_edges = cv2.Canny(cv2.GaussianBlur(gray, (11, 11), 0), 20, 60)
+        edge_distance = cv2.distanceTransform(255 - border_edges, cv2.DIST_L2, 3)
+        edge_tolerance = max(3, min(image.shape[:2]) * 0.015)
         plausible = []
         for polygon in candidates:
             area = cv2.contourArea(polygon)
@@ -90,10 +106,16 @@ class CardAligner:
                 # corner. Reject severely unequal opposing edges rather than
                 # cropping through the issuer/date with an incomplete hull.
                 if all(max(lengths[i], lengths[i + 2]) / min(lengths[i], lengths[i + 2]) < 1.5 for i in (0, 1)):
-                    plausible.append((area, ordered))
+                    support = []
+                    for start, end in zip(ordered, np.roll(ordered, -1, axis=0)):
+                        samples = np.rint(start + (end - start) * np.linspace(0.1, 0.9, 100)[:, None]).astype(int)
+                        support.append(float(np.mean(edge_distance[samples[:, 1], samples[:, 0]] <= edge_tolerance)))
+                    border_support = float(np.mean(support))
+                    if border_support >= 0.3:
+                        plausible.append((area * border_support, area, ordered))
         if not plausible:
             return None
-        _, ordered = max(plausible, key=lambda candidate: candidate[0])
+        _, _, ordered = max(plausible, key=lambda candidate: candidate[:2])
         return [(int(x), int(y)) for x, y in ordered]
 
     def align(self, image: np.ndarray, corners: list[tuple[int, int]] | None = None) -> AlignedCardResult:

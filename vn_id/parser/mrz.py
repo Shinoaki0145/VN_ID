@@ -51,6 +51,7 @@ def parse_mrz(text: str, alternate_text: str | None = None) -> MRZResult | None:
         return None
     result = MRZResult(raw_text="\n".join(first + second), checksums={
         "document_number": None,
+        "personal_number": None,
         "dob": None, "expiry_date": None, "composite": None,
     })
     valid_first = [line for line in first if (
@@ -58,7 +59,16 @@ def parse_mrz(text: str, alternate_text: str | None = None) -> MRZResult | None:
         and check_digit(line[5:14]) == line[14]
         and line[5:14] == line[18:27]
     )]
-    ids = {line[15:27] for line in valid_first}
+    # CCCD stores the 12-digit personal number at offsets 15:27;
+    # its check digit follows the two zero-valued fillers at offset 29.
+    complete_first = [line for line in valid_first if re.fullmatch(r"IDVNM\d{22}<<\d", line)]
+    valid_personal = [line for line in complete_first if check_digit(line[15:29]) == line[29]]
+    if complete_first:
+        result.checksums["personal_number"] = bool(valid_personal)
+        if not valid_personal:
+            result.warnings.append("MRZ id: personal number checksum failed.")
+    verified_first = [line for line in valid_first if line not in complete_first or line in valid_personal]
+    ids = {line[15:27] for line in verified_first}
     if len(ids) > 1:
         result.warnings.append("MRZ: ambiguous valid ID candidates; fields withheld.")
         return result

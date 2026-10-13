@@ -25,7 +25,7 @@ def test_mrz_fills_back_only_identity(line1, line2, id_num, dob, expiry):
     assert final.data.issue_loc is None
     assert final.data.name is None
     assert all(final.field_sources[field] == "mrz" for field in ("id", "dob", "gender", "expiry_date"))
-    assert back.mrz.checksums == {"document_number": True, "dob": True, "expiry_date": True, "composite": True}
+    assert back.mrz.checksums == {"document_number": True, "personal_number": True, "dob": True, "expiry_date": True, "composite": True}
     assert final.validation.mrz_checks == {}
 
 
@@ -116,20 +116,49 @@ def test_mrz_empty_and_ordinary_back_text():
     assert BackRuleExtractor.extract("Ngày cấp: 15/05/2022").mrz is None
 
 
-def test_mrz_ignores_personal_number_checksum_when_second_row_is_partial():
+def test_mrz_rejects_personal_number_checksum_when_second_row_is_partial():
     line1, line2, *_ = SAMPLES[0]
     wrong_personal_checksum = line1[:-1] + "1"
     back = BackRuleExtractor.extract(f"{wrong_personal_checksum}\n{line2[:18]}")
-    assert back.mrz.id == "046069005251"
-    assert "personal_number" not in back.mrz.checksums
-    assert back.mrz.warnings == []
+    assert back.mrz.id is None
+    assert back.mrz.checksums["document_number"] is True
+    assert back.mrz.checksums["personal_number"] is False
+    assert any("personal number checksum" in warning for warning in back.mrz.warnings)
 
 
 def test_mrz_accepts_truncated_optional_tail_without_prefix_warning():
     line1, line2, *_ = SAMPLES[0]
     back = BackRuleExtractor.extract(f"{line1[:27]}\n{line2[:18]}")
     assert back.mrz.id == "046069005251"
-    assert "personal_number" not in back.mrz.checksums
+    assert back.mrz.checksums["personal_number"] is None
+    assert back.mrz.warnings == []
+
+
+def test_mrz_personal_checksum_detects_changed_province_prefix():
+    line1, line2, *_ = SAMPLES[0]
+    corrupted = line1[:15] + "047" + line1[18:]
+    back = BackRuleExtractor.extract(f"{corrupted}\n{line2[:18]}")
+    assert back.mrz.checksums["document_number"] is True
+    assert back.mrz.checksums["personal_number"] is False
+    assert back.mrz.id is None
+    assert back.mrz.dob is None
+    assert back.mrz.expiry_date == "28/04/2029"
+
+
+def test_mrz_personal_checksum_works_without_second_row():
+    back = BackRuleExtractor.extract(SAMPLES[0][0])
+    assert back.mrz.checksums["personal_number"] is True
+    assert back.mrz.id == "046069005251"
+    assert back.mrz.checksums["composite"] is None
+
+
+def test_mrz_uses_valid_personal_checksum_from_alternate_recognizer():
+    line1, line2, *_ = SAMPLES[0]
+    back = BackRuleExtractor.extract(
+        f"{line1[:-1]}1\n{line2[:18]}", mrz_text=line1,
+    )
+    assert back.mrz.checksums["personal_number"] is True
+    assert back.mrz.id == "046069005251"
     assert back.mrz.warnings == []
 
 

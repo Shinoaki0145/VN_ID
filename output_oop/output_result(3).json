@@ -1,0 +1,78 @@
+{
+  "success": true,
+  "card_version": "can_cuoc_cong_dan_2021",
+  "side_detected": [
+    "front",
+    "back"
+  ],
+  "data": {
+    "id": "042308000028",
+    "cmnd_old": null,
+    "name": "SOCIALIST REPUBLIC OF MET NAM",
+    "dob": "22/11/2008",
+    "gender": "Nữ",
+    "nationality": "Việt Nam",
+    "origin": "Place of orggin",
+    "residence": "Có gianh 2011220 3 1 2013 Phú Diễn, Bác Tư Liêm, Hà Nội",
+    "issue_date": "31/08/2021",
+    "expiry_date": "22/11/2033",
+    "issue_loc": "Cục Cảnh sát Quản lý hành chính về trật tự xã hội",
+    "father_name": null,
+    "mother_name": null
+  },
+  "field_sources": {
+    "id": "front_rules",
+    "name": "front_rules",
+    "dob": "front_rules",
+    "gender": "front_rules",
+    "nationality": "default",
+    "origin": "front_rules",
+    "residence": "front_rules",
+    "issue_date": "back_rules",
+    "issue_loc": "back_rules",
+    "expiry_date": "front_rules"
+  },
+  "validation": {
+    "is_valid_12_digits": true,
+    "province_valid": true,
+    "gender_century_valid": true,
+    "birth_year_valid": true,
+    "address_fuzzy_score": 1.0,
+    "mrz_checks": {
+      "id": false,
+      "dob": false,
+      "gender": false,
+      "expiry_date": false
+    },
+    "mrz_checksums": {
+      "document_number": true,
+      "personal_number": true,
+      "dob": true,
+      "expiry_date": true,
+      "composite": true
+    },
+    "warnings": [
+      "MRZ id: 031097006888 differs from front_rules value 042308000028.",
+      "MRZ dob: 27/06/1997 differs from front_rules value 22/11/2008.",
+      "MRZ gender: Nam differs from front_rules value Nữ.",
+      "MRZ expiry_date: 27/06/2037 differs from front_rules value 22/11/2033."
+    ]
+  },
+  "timings": {
+    "front_align_ms": 6.064414978027344,
+    "qr_ms": 889.6572589874268,
+    "front_ocr_det_ms": 469.1956043243408,
+    "front_ocr_rec_ms": 752.2051334381104,
+    "front_ocr_sort_ms": 0.36525726318359375,
+    "front_ocr_ms": 1221.811056137085,
+    "front_rules_ms": 0.6396770477294922,
+    "back_align_ms": 10.557889938354492,
+    "back_ocr_det_ms": 399.16348457336426,
+    "back_ocr_rec_ms": 760.0038051605225,
+    "back_ocr_sort_ms": 0.23984909057617188,
+    "back_ocr_ms": 1159.5063209533691,
+    "back_rules_ms": 0.48065185546875,
+    "fusion_ms": 0.1366138458251953,
+    "total_ms": 3307.546854019165
+  }
+}

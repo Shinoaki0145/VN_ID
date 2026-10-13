@@ -73,15 +73,7 @@ PROVINCE_CODES: dict[str, str] = {
 # Thế kỷ 22 (2100-2199): Nam = 4, Nữ = 5
 # Thế kỷ 23 (2200-2299): Nam = 6, Nữ = 7
 # Thế kỷ 24 (2300-2399): Nam = 8, Nữ = 9
-GENDER_CENTURY_MAP: dict[int, dict[str, int]] = {
-    1900: {"Nam": 0, "Nữ": 1},
-    2000: {"Nam": 2, "Nữ": 3},
-    2100: {"Nam": 4, "Nữ": 5},
-    2200: {"Nam": 6, "Nữ": 7},
-    2300: {"Nam": 8, "Nữ": 9},
-}
-
-# Code sang thế kỷ & giới tính ngược lại
+# Mã chữ số thứ 4 -> năm bắt đầu thế kỷ sinh và giới tính
 CENTURY_GENDER_TO_INFO: dict[int, tuple[int, str]] = {
     0: (1900, "Nam"),
     1: (1900, "Nữ"),

@@ -3,7 +3,7 @@ from vn_id.core.schemas import (
     CardSide, AlignedCardResult, BackSideResult, 
     CCCDData, FinalCCCDResult, ValidationReport
 )
-from vn_id.core.constants import PROVINCE_CODES, GENDER_CENTURY_MAP
+from vn_id.core import PROVINCE_CODES, CENTURY_GENDER_TO_INFO
 
 def test_schemas_validation():
     back_res = BackSideResult(
@@ -23,11 +23,11 @@ def test_province_constants():
     assert PROVINCE_CODES["079"] == "Thành phố Hồ Chí Minh"
     assert len(PROVINCE_CODES) == 63
 
-def test_gender_century_map():
+def test_century_gender_to_info():
     # 20th century (1900-1999)
-    assert GENDER_CENTURY_MAP[1900]["Nam"] == 0
-    assert GENDER_CENTURY_MAP[1900]["Nữ"] == 1
+    assert CENTURY_GENDER_TO_INFO[0] == (1900, "Nam")
+    assert CENTURY_GENDER_TO_INFO[1] == (1900, "Nữ")
     # 21st century (2000-2099)
-    assert GENDER_CENTURY_MAP[2000]["Nam"] == 2
-    assert GENDER_CENTURY_MAP[2000]["Nữ"] == 3
+    assert CENTURY_GENDER_TO_INFO[2] == (2000, "Nam")
+    assert CENTURY_GENDER_TO_INFO[3] == (2000, "Nữ")
 

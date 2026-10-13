@@ -1,7 +1,7 @@
 """12-digit CCCD validation logic rules."""
 import re
 from vn_id.core.schemas import ValidationReport
-from vn_id.core.constants import PROVINCE_CODES, GENDER_CENTURY_MAP, CENTURY_GENDER_TO_INFO
+from vn_id.core.constants import PROVINCE_CODES, CENTURY_GENDER_TO_INFO
 
 
 class CCCDValidator:
@@ -36,7 +36,10 @@ class CCCDValidator:
 
         if birth_year and gender:
             century = (birth_year // 100) * 100
-            expected_code = GENDER_CENTURY_MAP.get(century, {}).get(gender)
+            expected_code = next(
+                (code for code, info in CENTURY_GENDER_TO_INFO.items() if info == (century, gender)),
+                None,
+            )
             if expected_code is not None and expected_code != century_digit:
                 gender_century_valid = False
                 warnings.append(

@@ -376,3 +376,86 @@ def test_origin_crop_can_append_only_without_changing_recognized_text(expanded, 
     engine._recover_front_address_lines(np.zeros((630, 1000, 3), dtype=np.uint8), boxes, recognizer)
 
     assert boxes[1].text == expected
+
+
+def test_front_layout_separates_address_from_merged_expiry_box():
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[292, 528, 768, 577], text='Nơi thường trú I Place ofresidence Tổ 15', confidence=.85),
+        TextBox(bbox=[27, 548, 757, 616], text='Có gianh 2011220 Phú Diễn, Bác Tư Liêm, Hà Nội', confidence=.6),
+        TextBox(bbox=[125, 552, 295, 602], text='22/11/2033', confidence=.85),
+    ]
+    engine._recover_front_layout(
+        np.zeros((630, 1000, 3), dtype=np.uint8), boxes,
+        SimpleNamespace(predict=lambda *args, **kwargs: ('Phú Diễn, Bắc Từ Liêm, Hà Nội', .92)),
+    )
+    assert boxes[1].text == 'Phú Diễn, Bắc Từ Liêm, Hà Nội'
+    assert boxes[1].bbox[0] >= 300
+    assert boxes[2].text == '22/11/2033'
+    text = engine.sorter.sort_boxes(boxes).full_text
+    assert '2011220' not in text
+
+
+def test_front_layout_low_confidence_reread_preserves_boxes():
+    engine = OCREngine()
+    boxes = [
+        TextBox(bbox=[292, 528, 768, 577], text='Nơi thường trú I Place ofresidence Tổ 15', confidence=.85),
+        TextBox(bbox=[27, 548, 757, 616], text='ordinary OCR', confidence=.6),
+    ]
+    original = [b.model_copy(deep=True) for b in boxes]
+    engine._recover_front_layout(np.zeros((630, 1000, 3), dtype=np.uint8), boxes,
+        SimpleNamespace(predict=lambda *args, **kwargs: ('bad crop', .3)))
+    assert boxes == original
+
+
+def test_front_expiry_region_requires_consistent_dates_without_changing_digits():
+    engine = OCREngine()
+    detector = SimpleNamespace(detect=lambda *args, **kwargs: ([[[127, 259, 9, 41]]], [[]]))
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: ('25/0212033', .68))
+    assert engine._recognize_expiry_region(np.zeros((43, 262, 3), dtype=np.uint8), detector, recognizer) == ('25/02/2033', .68)
+
+
+@pytest.mark.parametrize('second,prob', [('25/0212003', .7), ('25/0212033', .3)])
+def test_front_expiry_region_rejects_disagreement_or_low_confidence(second, prob):
+    engine = OCREngine()
+    detector = SimpleNamespace(detect=lambda *args, **kwargs: ([[[127, 259, 9, 41]]], [[]]))
+    answers = iter([('25/0212033', .68), (second, prob)])
+    recognizer = SimpleNamespace(predict=lambda *args, **kwargs: next(answers))
+    assert engine._recognize_expiry_region(np.zeros((43, 262, 3), dtype=np.uint8), detector, recognizer) is None
+
+
+@pytest.mark.parametrize('title,side', [
+    ('CĂN CƯỚC CÔNG', True),
+    ('CĂN CƯỚC CÔNG DÂN', True),
+    ('CĂN CƯỚC', True),
+    ('CĂN CƯỚC CÔNG', False),
+])
+def test_front_recovery_handles_truncated_2021_title_without_affecting_2024_or_back(title, side):
+    from vn_id.parser.front import FrontRuleExtractor
+
+    image = np.zeros((630, 1000, 3), dtype=np.uint8)
+    bounds = [[271, 659, 148, 200], [387, 948, 414, 465], [268, 908, 523, 585], [268, 742, 563, 616], [125, 259, 561, 594]]
+    initial = iter([
+        (title, .881),
+        ('Sex Nam Quốc tịch/Nationally Việt Nam', .815),
+        ('Noi thường trú/ Pisco o naidence Cái Nước Ngọn', .636),
+        ('Đông Yên, An Biên, Kiên Giang', .895),
+        ('05/03/2028', .905),
+    ])
+    def predict(crop, **kwargs):
+        try:
+            return next(initial)
+        except StopIteration:
+            return 'Nơi thường trú / Place of residence Cái Nước Ngọn', .85
+
+    engine = OCREngine(qr_decoder=SimpleNamespace(mask_qr_regions=lambda image:image))
+    engine._detector = SimpleNamespace(detect=lambda *args, **kwargs: ([bounds], [[]]))
+    engine._recognizer = SimpleNamespace(predict=predict)
+    ocr = engine.recognize(image, is_front=side)
+    front = FrontRuleExtractor.extract(ocr.full_text)
+    if side and title.startswith('CĂN CƯỚC CÔNG'):
+        assert front.residence == 'Cái Nước Ngọn, Đông Yên, An Biên, Kiên Giang'
+        assert front.expiry_date == '05/03/2028'
+    else:
+        assert 'Pisco o naidence' in ocr.full_text
+        assert 'Có giá trị đến:' not in ocr.full_text

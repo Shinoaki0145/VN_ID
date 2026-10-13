@@ -117,6 +117,67 @@ class OCREngine:
             offset = found + len(part)
         return candidate != " ".join(parts)
 
+    def _recognize_expiry_region(self, crop: np.ndarray, detector, recognizer) -> tuple[str, float] | None:
+        """Isolate the date beside its small label; require two agreeing reads."""
+        horizontal, _ = detector.detect(crop, height_ths=0.2, width_ths=0.3, canvas_size=128)
+        regions = [b for b in (horizontal[0] if horizontal else [])
+                   if b[0] >= 0.35 * crop.shape[1] and b[1] - b[0] >= 0.4 * crop.shape[1]]
+        if len(regions) != 1:
+            return None
+        xmin, xmax, ymin, ymax = map(int, regions[0])
+        readings = []
+        for top_trim, bottom_pad in ((2, -2), (6, 2)):
+            digits = crop[max(0, ymin + top_trim):min(crop.shape[0], ymax + bottom_pad),
+                          max(0, xmin - 2):min(crop.shape[1], xmax + 2)]
+            if digits.size == 0:
+                return None
+            value, prob = recognizer.predict(Image.fromarray(cv2.cvtColor(digits, cv2.COLOR_BGR2RGB)), return_prob=True)
+            # A slash between month and year can be read as '1'. All date
+            # digits must still be present, and both crops must agree.
+            match = re.fullmatch(r"(\d{2})[/.-](\d{2})[/ .\-1](\d{4})", value.strip())
+            if not match or prob < 0.65:
+                return None
+            day, month, year = map(int, match.groups())
+            try:
+                date(year, month, day)
+            except ValueError:
+                return None
+            readings.append((f"{day:02d}/{month:02d}/{year:04d}", float(prob)))
+        if readings[0][0] == readings[1][0]:
+            return readings[0][0], min(prob for _, prob in readings)
+        return None
+
+    def _recover_front_layout(self, image: np.ndarray, boxes: list[TextBox], recognizer) -> None:
+        """Reread low-confidence address labels and boxes crossing both columns."""
+        h, w = image.shape[:2]
+        for box in boxes:
+            x1, y1, x2, y2 = box.bbox
+            header = remove_accents(box.text).upper()
+            merged_columns = x1 < 0.25 * w and x2 > 0.55 * w and y1 > 0.8 * h
+            address_header = "NOI THUONG TRU" in header or "NOI CU TRU" in header
+            address_fragment = box.confidence < 0.7 and any(
+                "NOI THUONG TRU" in remove_accents(other.text).upper()
+                and other.bbox[2] < x1
+                and abs((other.bbox[1] + other.bbox[3]) / 2 - (y1 + y2) / 2) <= self.sorter.y_threshold
+                for other in boxes
+            )
+            if not merged_columns and not address_fragment and not (address_header and box.confidence < 0.8):
+                continue
+            left = max(x1, round(0.3 * w)) if merged_columns else x1
+            top = y1 + round(0.15 * (y2 - y1)) if merged_columns else y1
+            candidates = []
+            for trim in ((0, 6) if address_fragment else (0, 3)):
+                bottom = y2 if address_fragment else y2 - 3
+                crop = image[max(0, top + trim):min(h, bottom), left:min(w, x2)]
+                if crop.size == 0:
+                    continue
+                value, prob = recognizer.predict(Image.fromarray(cv2.cvtColor(crop, cv2.COLOR_BGR2RGB)), return_prob=True)
+                if value.strip() and prob >= max(0.8, box.confidence + 0.03):
+                    candidates.append((float(prob), unicodedata.normalize("NFC", value.strip())))
+            if candidates:
+                box.confidence, box.text = max(candidates)
+                box.bbox = [left, top, x2, y2]
+
     def _recover_front_address_lines(self, image: np.ndarray, boxes: list[TextBox], recognizer) -> None:
         """Re-read address rows when DBNet split characters between adjacent boxes."""
         h, w = image.shape[:2]
@@ -133,7 +194,7 @@ class OCREngine:
 
         for previous, line in zip(lines, lines[1:]):
             header = remove_accents(" ".join(box.text for box in previous)).upper()
-            if not any(anchor in header for anchor in ("QUE QUAN", "NOI THUONG TRU", "NOI CU TRU")):
+            if not any(anchor in header for anchor in ("QUE QUAN", "QUO QUAN", "NOI THUONG TRU", "NOI CU TRU")):
                 continue
             if len(line) == 1 and "QUE QUAN" in header:
                 box = line[0]
@@ -159,6 +220,17 @@ class OCREngine:
                             box.text = candidate
                             box.confidence = min(prob for _, prob in expanded)
                             box.bbox[2] = min(w, x2 + height)
+                continue
+            if len(line) == 1 and "QUO QUAN" in header:
+                box = line[0]
+                x1, y1, x2, y2 = box.bbox
+                rereads = [read(x1, y1 + trim, x2, y2 - 3) for trim in (6, 9)]
+                candidate = rereads[0][0]
+                letters = lambda value: re.sub(r"[^A-Z0-9]", "", remove_accents(value).upper())
+                if (all(value == candidate and prob >= max(0.85, box.confidence - 0.02)
+                        for value, prob in rereads) and letters(candidate) == letters(box.text)):
+                    box.text = candidate
+                    box.confidence = min(prob for _, prob in rereads)
                 continue
             if len(line) < 2:
                 continue
@@ -276,10 +348,12 @@ class OCREngine:
                     try:
                         text, prob = recognizer.predict(pil_crop, return_prob=True)
                         clean_text = unicodedata.normalize("NFC", text.strip())
-                        if is_front and clean_text.casefold().startswith(("số", "so ", "no.")) and not re.search(r"\b\d{12}\b", clean_text):
+                        if is_front and clean_text.casefold().startswith(("số", "so ", "no.")) and (
+                            not re.search(r"\b\d{12}\b", clean_text) or prob < 0.8
+                        ):
                             try:
                                 candidate = self._recognize_id_region(crop, detector, recognizer)
-                                if candidate:
+                                if candidate and candidate[1] >= prob:
                                     clean_text, prob = candidate
                             except Exception as error:
                                 logger.warning("ID region recognition unavailable; keeping ordinary OCR: %s", str(error))
@@ -298,6 +372,10 @@ class OCREngine:
 
             if is_front:
                 visible_text = remove_accents(" ".join(box.text for box in boxes)).upper()
+                # DBNet can clip the final word of the large title (e.g. CUDA
+                # reads "CAN CUOC CONG"). "CONG" still distinguishes this
+                # layout from the 2024 "CAN CUOC" title.
+                has_cccd_title = bool(re.search(r"\bCAN\s+CUOC\s+CONG\b", visible_text))
                 expiry_boxes = [
                     box for box in boxes
                     if box.bbox[2] <= 0.35 * w and box.bbox[1] >= 0.82 * h
@@ -312,7 +390,31 @@ class OCREngine:
                     and re.search(r"(?<!\d)\d{1,2}[/.-]\d{1,2}[/.-]\d{4}(?!\d)", box.text)
                     for box in expiry_boxes
                 )
-                if "CAN CUOC CONG DAN" in visible_text and has_expiry_label and not has_clear_date:
+                if has_cccd_title:
+                    for box in expiry_boxes:
+                        match = re.fullmatch(r"(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})", box.text)
+                        if match and box.confidence >= 0.8:
+                            try:
+                                day, month, year = map(int, match.groups())
+                                date(year, month, day)
+                            except ValueError:
+                                continue
+                            box.text = f"Có giá trị đến: {box.text}"
+                    if not has_clear_date:
+                        for box in expiry_boxes:
+                            if box.confidence >= 0.65:
+                                continue
+                            x1, y1, x2, y2 = box.bbox
+                            try:
+                                candidate = self._recognize_expiry_region(image[y1:y2, x1:x2], detector, recognizer)
+                                if candidate:
+                                    value, box.confidence = candidate
+                                    box.text = f"Có giá trị đến: {value}"
+                                    has_clear_date = True
+                                    break
+                            except Exception as error:
+                                logger.warning("Expiry region reread unavailable; keeping ordinary OCR: %s", error)
+                if has_cccd_title and has_expiry_label and not has_clear_date:
                     try:
                         x1, x2 = round(0.125 * w), round(0.295 * w)
                         y1, y2 = round(0.876 * h), round(0.956 * h)
@@ -362,6 +464,8 @@ class OCREngine:
             if is_front and boxes:
                 original_boxes = [box.model_copy(deep=True) for box in boxes]
                 try:
+                    if has_cccd_title:
+                        self._recover_front_layout(image, boxes, recognizer)
                     self._recover_front_address_lines(image, boxes, recognizer)
                 except Exception as error:
                     boxes = original_boxes
