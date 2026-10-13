@@ -14,6 +14,12 @@ from vn_id.validator import DataFusion
         ("Số: 001098012345\nNơi cư trú: Hà Nội", "unknown"),
         ("Số căn cước: 001098012345", "unknown"),
         ("CĂN CƯỚC\nSố: 001098012345\nNơi thường trú: Hà Nội", "unknown"),
+        ("CĂN CƯỚC CÔNG\nQuê quán: Hà Nội", "can_cuoc_cong_dan_2021"),
+        ("CĂN CƯỚC CÔNG\nNơi thường trú: Hà Nội", "can_cuoc_cong_dan_2021"),
+        ("CĂN CƯỚC CÔNG\nCó giá trị đến: 01/01/2030", "can_cuoc_cong_dan_2021"),
+        ("CĂN CƯỚC CÔNG\nSố: 001098012345", "unknown"),
+        ("CĂN CƯỚC CÔNG\nNơi cư trú: Hà Nội", "unknown"),
+        ("Số căn cước công: 001098012345\nQuê quán: Hà Nội", "unknown"),
     ],
 )
 def test_front_card_version_from_title(text, expected):

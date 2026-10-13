@@ -290,6 +290,7 @@ def test_front_9_to_11_ocr_only(ocr_only_engine, name, id_num, person, origin, r
         id_num, person, origin, residence, expiry,
     )
     assert front.dob == {'front_cu_10.png': '05/03/2003', 'front_cu_11.png': '22/11/2008'}[name]
+    assert front.card_version == 'can_cuoc_cong_dan_2021'
 
 
 def test_front_cu_9_ocr_only_recovers_identity_address_content_and_expiry(ocr_only_engine):
@@ -334,3 +335,4 @@ def test_front_cu_10_recovers_fields_when_detector_clips_title_on_colab(ocr_only
     front = FrontRuleExtractor.extract(ocr.full_text)
     assert front.residence == 'Cái Nước Ngọn, Đông Yên, An Biên, Kiên Giang'
     assert front.expiry_date == '05/03/2028'
+    assert front.card_version == 'can_cuoc_cong_dan_2021'

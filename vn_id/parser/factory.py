@@ -41,7 +41,7 @@ class CardParserFactory:
 
     @staticmethod
     def _detect_front(text: str) -> CardVersion:
-        """Use the front title only; abstain if OCR did not read it clearly."""
+        """Use the title; require old-layout evidence when its final word is clipped."""
         lines = [remove_accents(line).upper().strip() for line in text.splitlines() if line.strip()][:5]
         for index, line in enumerate(lines):
             if re.fullmatch(r"CAN\s+CUOC\s+CONG\s+DAN", line):
@@ -52,6 +52,8 @@ class CardParserFactory:
             marker in remove_accents(text).upper()
             for marker in ("NOI THUONG TRU", "QUE QUAN", "CO GIA TRI DEN")
         )
+        if old_layout and any(re.fullmatch(r"CAN\s+CUOC\s+CONG", line) for line in lines):
+            return CardVersion.CCCD_2021
         for index, line in enumerate(lines):
             if line == "CAN CUOC" and not old_layout and (
                 index + 1 == len(lines) or not lines[index + 1].startswith("CONG")
