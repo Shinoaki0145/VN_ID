@@ -1,0 +1,11 @@
+# Only package sources and locked dependency metadata enter the build context.
+**
+!Dockerfile
+!.dockerignore
+!pyproject.toml
+!uv.lock
+!README.md
+!vn_id/
+!vn_id/**
+vn_id/**/__pycache__/
+vn_id/**/*.pyc

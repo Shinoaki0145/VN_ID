@@ -85,6 +85,17 @@ curl -F "front=@image/front_moi_1.jpg" -F "back=@image/back_moi_1.jpg" http://12
 
 Swagger UI: `http://127.0.0.1:8000/docs`; health check: `GET /health`. Ảnh không giải mã được trả HTTP 400. `/health` chỉ xác nhận ứng dụng khởi động, không kiểm tra model đã tải. API chưa có xác thực; ví dụ chỉ bind localhost.
 
+### Docker với GPU NVIDIA
+
+```bash
+docker build -t vn-id:0.1.0-gpu .
+docker compose up -d
+```
+
+Compose yêu cầu NVIDIA GPU và runtime phù hợp; model lưu trong volume riêng,
+ảnh và kết quả không được đưa vào image. Xem [hướng dẫn Docker](docs/docker.md)
+để kiểm tra CUDA, cache trọng số và chạy smoke test bằng CPU.
+
 ## Kết quả
 
 | Trường | Ý nghĩa |
