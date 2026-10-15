@@ -2,16 +2,16 @@
 
 ## Môi trường
 
-Chạy từ thư mục gốc dự án. Python tối thiểu 3.10. `uv` là cách cài được khóa phiên bản; `pip` vẫn dùng được nhưng giải quyết phiên bản theo thời điểm cài.
+Chạy từ thư mục gốc dự án. Yêu cầu **Python 3.12** để dùng môi trường VietOCR đã được kiểm tra, đồng nhất với Docker. `.python-version` chọn Python 3.12 cho `uv`; `pyproject.toml` giới hạn package ở nhánh 3.12.x. `uv` là cách cài được khóa phiên bản; `pip` vẫn dùng được nhưng giải quyết phiên bản theo thời điểm cài.
 
 ```bash
 uv sync --locked                 # cài pipeline, API, CLI, EasyOCR, VietOCR, QReader và PyTorch
 ```
 
-Nếu dùng pip, cài trong môi trường Python 3.10+:
+Nếu dùng pip, tạo môi trường bằng Python 3.12:
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
@@ -20,7 +20,33 @@ File này cài project ở chế độ editable và lấy dependency từ `pypro
 
 Trên Linux, PyTorch có thể kéo các gói CUDA dung lượng lớn kể cả khi dùng CPU. Cần đủ ổ đĩa và kết nối mạng cho lần cài/tải model đầu. Với bản cài editable trong repo, model được lưu dưới `.easyocr_models/` và `.models/` (đều bị `.gitignore` bỏ qua). Bản cài từ wheel dùng `~/.cache/vn_id/`. Không xóa cache nếu muốn chạy ngoại tuyến.
 
+QReader/pyzbar cần thư viện hệ thống ZBar để đọc QR. Trên Ubuntu 26.04:
+
+```bash
+sudo apt-get install libzbar0t64
+```
+
+Ubuntu bản cũ có thể dùng tên gói `libzbar0`. Nếu thiếu thư viện này,
+QReader báo `Unable to find zbar shared library`; OCR vẫn có thể chạy nhưng
+phần đọc QR không hoạt động.
+
 ## Chạy một hoặc hai mặt
+
+### EasyOCR DBNet trên CUDA với PyTorch mới
+
+Nếu biên dịch `deform_conv_cuda`/`deform_pool_cuda` báo lỗi chuyển đổi
+`at::DeprecatedTypeProperties` sang `c10::ScalarType`, chạy bản vá trong repo:
+
+```bash
+uv run python scripts/patch_easyocr_cuda.py
+```
+
+Script chỉ đổi `tensor.type()` thành `tensor.scalar_type()` tại các macro dispatch
+CUDA của EasyOCR đã cài. Có thể chạy nhiều lần; chạy lại sau khi tạo mới `.venv`
+hoặc cài lại EasyOCR. CUDA Toolkit và `CUDA_HOME` vẫn cần được cấu hình trước.
+Khởi động lại Uvicorn/CLI để PyTorch biên dịch lại extension từ source đã sửa.
+
+### Trích xuất ảnh
 
 ```bash
 uv run vn-id extract --front image/front_moi_1.jpg

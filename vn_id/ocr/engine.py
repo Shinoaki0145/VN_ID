@@ -39,6 +39,9 @@ class OCREngine:
     def _get_detector(self):
         if self._detector is None:
             import easyocr
+            from vn_id.ocr.dbnet_compat import use_torchvision_ops
+
+            use_torchvision_ops()
 
             EASYOCR_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
             EASYOCR_USER_NETWORK_DIR.mkdir(parents=True, exist_ok=True)
