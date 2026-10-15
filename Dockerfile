@@ -21,7 +21,8 @@ COPY pyproject.toml uv.lock README.md ./
 COPY vn_id ./vn_id
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-editable --reinstall-package vn-id \
-    && uv pip check --python /opt/venv/bin/python
+    && uv pip check --python /opt/venv/bin/python \
+    && /opt/venv/bin/python -c "import torch; assert torch.version.cuda is not None, 'GPU image requires a CUDA-enabled PyTorch build'; print('PyTorch', torch.__version__, 'CUDA', torch.version.cuda)"
 
 FROM runtime
 COPY --from=builder /opt/venv /opt/venv

@@ -14,6 +14,28 @@ và [GPU trong Docker Desktop](https://docs.docker.com/desktop/features/gpu/).
 
 ## Build và chạy
 
+### Máy Ubuntu/WSL2 chưa cài Docker
+
+Chạy tại thư mục repo:
+
+```bash
+bash scripts/setup_docker_gpu.sh
+```
+
+Script yêu cầu mật khẩu `sudo` trong terminal, cài Docker Engine, Buildx,
+Compose và NVIDIA Container Toolkit từ repository chính thức, cấu hình runtime
+rồi khởi động lại Docker. Sau đó build image, kiểm tra phép tính CUDA thật
+(`torchvision.ops.deform_conv2d` của DBNet), chạy API và xác nhận health trả
+`device: cuda`. Script dừng ngay khi một bước lỗi. Chưa kiểm tra inference OCR
+với ảnh thật; lần gửi ảnh đầu vẫn cần tải trọng số.
+
+WSL2 cần bật systemd và driver NVIDIA trên Windows; script không cài driver
+Linux trong WSL. Không dùng script này cho Docker Desktop: bật WSL integration
+trong Desktop rồi dùng các lệnh build bên dưới. Script không thêm user vào
+nhóm `docker`; sau khi cài có thể dùng `sudo docker compose ...` để quản lý.
+
+### Máy đã có Docker và NVIDIA runtime
+
 ```bash
 docker build -t vn-id:0.1.0-gpu .
 docker compose up -d
